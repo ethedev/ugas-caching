@@ -5,7 +5,9 @@ const moment = require("moment");
 
 const GasMedian = require("../models/median");
 const Twap = require("../models/twap");
+const Index = require("../models/indexValue");
 const TestingUniPriceFunctions = require("../price-feed/CreateNewUni");
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 const client = new BigQuery();
 
@@ -32,6 +34,18 @@ const createMedian = async (req, res, next) => {
   });
 
   await createdMedian.save();
+  // res.json(result);
+};
+
+const getIndexFromSpreadsheet = async (req, res, next) => {
+  const indexValue = await fetchIndex();
+
+  const fetchedIndex = new Index({
+    timestamp: indexValue[0],
+    price: indexValue[1],
+  });
+
+  await fetchedIndex.save();
   // res.json(result);
 };
 
@@ -112,7 +126,7 @@ function buildQuery(formattedCurrentTime, formattedEarlierTimeBound) {
   return query;
 }
 
-async function runQuery() {
+async function formatCurrentTime() {
   const currentTime = new Date();
   let formattedCurrentTime = moment(currentTime)
     .subtract(5, "minutes")
@@ -132,6 +146,12 @@ async function runQuery() {
     .utc()
     .format("YYYY-MM-DD HH:mm:ss");
 
+  return formattedCurrentTime;
+}
+
+async function runQuery() {
+  const formattedCurrentTime = await formatCurrentTime();
+
   let priceResponse;
 
   try {
@@ -139,6 +159,27 @@ async function runQuery() {
       buildQuery(formattedCurrentTime, formattedEarlierTimeBound)
     );
     priceResponse = priceResponse[0].gas_price;
+  } catch (error) {
+    console.error(error);
+  }
+
+  return [formattedCurrentTime, priceResponse];
+}
+
+async function fetchIndex() {
+  const formattedCurrentTime = await formatCurrentTime();
+
+  let priceResponse;
+
+  try {
+    const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
+    await doc.useApiKey(process.env.GAPI_KEY);
+    await doc.loadInfo();
+
+    const sheet = await doc.sheetsByIndex[0];
+    await sheet.loadCells("M50");
+    const targetCell = await sheet.getCellByA1("M50");
+    priceResponse = targetCell.value;
   } catch (error) {
     console.error(error);
   }
@@ -156,6 +197,24 @@ const getMedians = async (req, res, next) => {
   }
     console.log("theResults", theResults)
     res.json(theResults);
+};
+
+const getIndex = async (req, res, next) => {
+  const index = await Index.find().select("timestamp price").exec();
+  let theResults = [];
+  for (let i = 0; i < index.length; i++) {
+    // if (i % 2 == 0) {
+      theResults.push(index[i]);
+    // }
+  }
+    console.log("theResults", theResults)
+    res.json(theResults);
+};
+
+const getLatestIndex = async (req, res, next) => {
+  const index = await Index.find().select("timestamp price").exec();
+
+  res.json(index[index.length - 1]);
 };
 
 const getMedianRange = async (req, res, next) => {
@@ -237,7 +296,10 @@ const twapCreation = async (req, res, next) => {
   };
 
 exports.createMedian = createMedian;
+exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
 exports.getMedians = getMedians;
+exports.getIndex = getIndex;
+exports.getLatestIndex = getLatestIndex;
 exports.getTwaps = getTwaps;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
