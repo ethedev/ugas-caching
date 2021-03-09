@@ -19,6 +19,11 @@ cron.schedule('0 * * * *', function() {
     mongoFunctions.twapCreation();
 });
 
+// index scheduler
+cron.schedule('0 * * * *', function() {
+    console.log("running index cron")
+    mongoFunctions.getIndexFromSpreadsheet();
+});
 
 app.use(bodyParser.json());
 
@@ -33,16 +38,17 @@ app.use((req, res, next) => {
     next();
   });
 
+// gas
 app.get('/median', mongoFunctions.getMedians);
-
 app.get('/median-range', mongoFunctions.getMedianRange)
-
 app.get('/current-median', mongoFunctions.getLatestMedian);
-
 app.get('/twap', mongoFunctions.getTwaps);
-
 app.get('/current-twap', mongoFunctions.getLatestTwap);
-
 app.get('/twap-range', mongoFunctions.getTwapRange);
+
+// other
+app.get('/index', mongoFunctions.getIndex);
+app.get('/current-index', mongoFunctions.getLatestIndex);
+
 
 app.listen(8080);
