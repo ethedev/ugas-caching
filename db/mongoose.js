@@ -213,8 +213,7 @@ const getIndex = async (req, res, next) => {
 
 const getLatestIndex = async (req, res, next) => {
   const index = await Index.find().select("timestamp price").exec();
-
-  res.json(index[index.length - 1]);
+  res.json(index[index.length - 1] || {});
 };
 
 const getMedianRange = async (req, res, next) => {
