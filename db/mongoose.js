@@ -271,7 +271,7 @@ const getTwapRange = async (req, res, next) => {
 
 const getLatestTwap = async (req, res, next) => {
     const twaps = await Twap.find().select("timestamp price").exec();
-    res.json(twaps[twaps.length - 1]);
+    res.json(twaps[twaps.length - 1] || {});
   };
 
 const twapCreation = async (req, res, next) => {
