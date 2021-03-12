@@ -42,9 +42,15 @@ app.use((req, res, next) => {
 app.get('/median', mongoFunctions.getMedians);
 app.get('/median-range', mongoFunctions.getMedianRange)
 app.get('/current-median', mongoFunctions.getLatestMedian);
-app.get('/twap', mongoFunctions.getTwaps);
 app.get('/current-twap', mongoFunctions.getLatestTwap);
 app.get('/twap-range', mongoFunctions.getTwapRange);
+app.get('/twap', () => {
+  if (req.query.asset) {
+    mongoFunctions.getTwapsWithParam(req.query.asset);
+  } else {
+    mongoFunctions.getTwaps;
+  }
+});
 
 // other
 app.get('/index', mongoFunctions.getIndex);
