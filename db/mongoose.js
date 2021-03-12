@@ -213,8 +213,7 @@ const getIndex = async (req, res, next) => {
 
 const getLatestIndex = async (req, res, next) => {
   const index = await Index.find().select("timestamp price").exec();
-
-  res.json(index[index.length - 1]);
+  res.json(index[index.length - 1] || {});
 };
 
 const getMedianRange = async (req, res, next) => {
@@ -272,7 +271,7 @@ const getTwapRange = async (req, res, next) => {
 
 const getLatestTwap = async (req, res, next) => {
     const twaps = await Twap.find().select("timestamp price").exec();
-    res.json(twaps[twaps.length - 1]);
+    res.json(twaps[twaps.length - 1] || {});
   };
 
 const twapCreation = async (req, res, next) => {
