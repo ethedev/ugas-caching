@@ -292,6 +292,7 @@ const getLatestTwap = async (req, res, next) => {
 const twapCreation = async (req, res, next) => {
     let priceFeed;
     try {
+      // TODO: Pass asset param if specified.
       priceFeed = await TestingUniPriceFunctions.usePriceFeed();
     } catch (err) {
       console.log(err);
@@ -300,6 +301,7 @@ const twapCreation = async (req, res, next) => {
     let time = priceFeed.lastUpdateTime;
     time = time * 1000;
   
+    // TODO: Pass asset param if specified.
     const createdTwap = new Twap({
       timestamp: time,
       price: price,
