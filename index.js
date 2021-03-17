@@ -44,13 +44,10 @@ app.get('/median-range', mongoFunctions.getMedianRange)
 app.get('/current-median', mongoFunctions.getLatestMedian);
 app.get('/current-twap', mongoFunctions.getLatestTwap);
 app.get('/twap-range', mongoFunctions.getTwapRange);
-app.get('/twap', () => {
-  if (req.query.asset) {
-    mongoFunctions.getTwapsWithParam(req.query.asset);
-  } else {
-    mongoFunctions.getTwaps;
-  }
-});
+app.get('/twap', mongoFunctions.getTwaps);
+app.get('/twap/pair/:asset', function (req, res) {
+  mongoFunctions.getTwapsWithParam(req.params)
+})
 
 // other
 app.get('/index', mongoFunctions.getIndex);
