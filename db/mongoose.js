@@ -146,11 +146,11 @@ async function formatCurrentTime() {
     .utc()
     .format("YYYY-MM-DD HH:mm:ss");
 
-  return formattedCurrentTime;
+    return { formattedCurrentTime, formattedEarlierTimeBound };
 }
 
 async function runQuery() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime, formattedEarlierTimeBound } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -167,7 +167,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -266,6 +266,15 @@ const getTwapsWithParam = async (req, res, next) => {
   res.json(theResults);
 }
 
+const getLatestTwapWithParam = async (req, res, next) => {
+  const passedAddress = req.address;
+  const twaps = await Twap.find(
+    { address: { $eq: passedAddress } }
+  ).select("timestamp price").exec();
+
+  res.json(twaps[twaps.length - 1] || {});
+}
+
 const getTwapRange = async (req, res, next) => {
     let currentTime = new Date();
     let earlierTime = currentTime - 259200000;
@@ -316,7 +325,8 @@ const twapCreation = async (req, res, next) => {
       });
       await createdTwap.save();
     }
-};
+
+  };
 
 exports.createMedian = createMedian;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
@@ -328,5 +338,6 @@ exports.getTwapsWithParam = getTwapsWithParam;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
 exports.getLatestTwap = getLatestTwap;
+exports.getLatestTwapWithParam = getLatestTwapWithParam;
 exports.getTwapRange = getTwapRange;
 exports.getMedianRange = getMedianRange;
