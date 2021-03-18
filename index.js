@@ -14,7 +14,7 @@ cron.schedule('0 0 * * *', function() {
 });
 
 // twap scheduler
-cron.schedule('* * * * *', function() {
+cron.schedule('0 * * * *', function() {
     console.log("running twap cron")
     mongoFunctions.twapCreation();
 });
@@ -26,6 +26,8 @@ cron.schedule('*/5 * * * *', function() {
 });
 
 // add cleaner
+
+// add twap cleaner, check expired asset.json and remove all
 
 app.use(bodyParser.json());
 
@@ -45,11 +47,11 @@ app.get('/median-history', mongoFunctions.getMedians);
 app.get('/median-range', mongoFunctions.getMedianRange)
 
 // twap
-app.get('/twap', mongoFunctions.getLatestTwap);
+// app.get('/twap', mongoFunctions.getLatestTwap);
+// app.get('/twap-history', mongoFunctions.getTwaps);
+// app.get('/twap-range', mongoFunctions.getTwapRange);
 app.get('/twap/pair/:address', mongoFunctions.getLatestTwapWithParam);
-app.get('/twap-history', mongoFunctions.getTwaps);
 app.get('/twap-history/pair/:address', mongoFunctions.getTwapsWithParam);
-app.get('/twap-range', mongoFunctions.getTwapRange);
 
 // other
 app.get('/ustonks/index', mongoFunctions.getLatestIndex);
