@@ -146,11 +146,11 @@ async function formatCurrentTime() {
     .utc()
     .format("YYYY-MM-DD HH:mm:ss");
 
-  return formattedCurrentTime;
+    return { formattedCurrentTime, formattedEarlierTimeBound };
 }
 
 async function runQuery() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime, formattedEarlierTimeBound } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -167,7 +167,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime } = await formatCurrentTime();
 
   let priceResponse;
 

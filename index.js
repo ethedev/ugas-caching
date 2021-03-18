@@ -20,23 +20,24 @@ cron.schedule('0 * * * *', function() {
 });
 
 // index scheduler
-cron.schedule('0 * * * *', function() {
+cron.schedule('*/5 * * * *', function() {
     console.log("running index cron")
     mongoFunctions.getIndexFromSpreadsheet();
 });
+
+// add cleaner
 
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-  
     next();
-  });
+});
 
 // gas
 app.get('/median-history', mongoFunctions.getMedians);
