@@ -146,11 +146,11 @@ async function formatCurrentTime() {
     .utc()
     .format("YYYY-MM-DD HH:mm:ss");
 
-  return formattedCurrentTime;
+    return { formattedCurrentTime, formattedEarlierTimeBound };
 }
 
 async function runQuery() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime, formattedEarlierTimeBound } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -167,7 +167,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const formattedCurrentTime = await formatCurrentTime();
+  const { formattedCurrentTime } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -251,6 +251,30 @@ const getTwaps = async (req, res, next) => {
   res.json(theResults);
 };
 
+const getTwapsWithParam = async (req, res, next) => {
+  const passedAddress = req.address;
+  const twaps = await Twap.find(
+    { address: { $eq: passedAddress } }
+  ).select("timestamp price").exec();
+  let theResults = [];
+  for (let i = 0; i < twaps.length; i++) {
+    // if (i % 2 == 0) {
+      theResults.push(twaps[i]);
+    // }
+  }
+
+  res.json(theResults);
+}
+
+const getLatestTwapWithParam = async (req, res, next) => {
+  const passedAddress = req.address;
+  const twaps = await Twap.find(
+    { address: { $eq: passedAddress } }
+  ).select("timestamp price").exec();
+
+  res.json(twaps[twaps.length - 1] || {});
+}
+
 const getTwapRange = async (req, res, next) => {
     let currentTime = new Date();
     let earlierTime = currentTime - 259200000;
@@ -275,23 +299,33 @@ const getLatestTwap = async (req, res, next) => {
   };
 
 const twapCreation = async (req, res, next) => {
+    // Array of all uniswap pool addresses.
+    const assetPairArray = [
+        "0x25fb29d865c1356f9e95d621f21366d3a5db6bb0",
+        "0x4a8a2ea3718964ed0551a3191c30e49ea38a5ade",
+        "0x683ea972ffa19b7bad6d6be0440e0a8465dba71c",
+        "0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873",
+        "0xedf187890af846bd59f560827ebd2091c49b75df",
+    ];
     let priceFeed;
-    try {
-      priceFeed = await TestingUniPriceFunctions.usePriceFeed();
-    } catch (err) {
-      console.log(err);
+    for (const assetPairAddress in assetPairArray) {
+      try {
+        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairArray[assetPairAddress]);
+      } catch (err) {
+        console.log(err);
+      }
+      let price = priceFeed.getCurrentPrice().toString();
+      let time = priceFeed.lastUpdateTime;
+      time = time * 1000;
+    
+      const createdTwap = new Twap({
+        address: assetPairArray[assetPairAddress],
+        timestamp: time,
+        price: price,
+      });
+      await createdTwap.save();
     }
-    let price = priceFeed.getCurrentPrice().toString();
-    let time = priceFeed.lastUpdateTime;
-    time = time * 1000;
-  
-    const createdTwap = new Twap({
-      timestamp: time,
-      price: price,
-    });
-    console.log(createdTwap);
-  
-    await createdTwap.save();
+
   };
 
 exports.createMedian = createMedian;
@@ -300,8 +334,10 @@ exports.getMedians = getMedians;
 exports.getIndex = getIndex;
 exports.getLatestIndex = getLatestIndex;
 exports.getTwaps = getTwaps;
+exports.getTwapsWithParam = getTwapsWithParam;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
 exports.getLatestTwap = getLatestTwap;
+exports.getLatestTwapWithParam = getLatestTwapWithParam;
 exports.getTwapRange = getTwapRange;
 exports.getMedianRange = getMedianRange;
