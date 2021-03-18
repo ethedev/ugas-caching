@@ -252,7 +252,7 @@ const getTwaps = async (req, res, next) => {
 };
 
 const getTwapsWithParam = async (req, res, next) => {
-  const passedAddress = req.address;
+  const passedAddress = req.params.address;
   const twaps = await Twap.find(
     { address: { $eq: passedAddress } }
   ).select("timestamp address price").exec();
