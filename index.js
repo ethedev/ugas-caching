@@ -40,21 +40,23 @@ app.use((req, res, next) => {
 });
 
 // gas
+app.get('/median', mongoFunctions.getLatestMedian);
 app.get('/median-history', mongoFunctions.getMedians);
 app.get('/median-range', mongoFunctions.getMedianRange)
-app.get('/median', mongoFunctions.getLatestMedian);
+
+// twap
 app.get('/twap', mongoFunctions.getLatestTwap);
-app.get('/twap-range', mongoFunctions.getTwapRange);
+app.get('/twap/pair/:address', function (req, res) {
+  mongoFunctions.getLatestTwapWithParam(req.params)
+});
 app.get('/twap-history', mongoFunctions.getTwaps);
 app.get('/twap-history/pair/:address', function (req, res) {
   mongoFunctions.getTwapsWithParam(req.params)
 });
-app.get('/twap/pair/:address', function (req, res) {
-  mongoFunctions.getLatestTwapWithParam(req.params)
-});
+app.get('/twap-range', mongoFunctions.getTwapRange);
 
 // other
-app.get('/ustonks/index-history', mongoFunctions.getIndex);
 app.get('/ustonks/index', mongoFunctions.getLatestIndex);
+app.get('/ustonks/index-history', mongoFunctions.getIndex);
 
 app.listen(8080);
