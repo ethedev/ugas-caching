@@ -314,7 +314,7 @@ const twapCreation = async (req, res, next) => {
       } catch (err) {
         console.log(err);
       }
-      let price = priceFeed.getCurrentPrice().toString();
+      let price = priceFeed.getCurrentPrice();
       let time = priceFeed.lastUpdateTime;
       time = time * 1000;
     
