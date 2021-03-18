@@ -45,7 +45,7 @@ app.get('/current-median', mongoFunctions.getLatestMedian);
 app.get('/current-twap', mongoFunctions.getLatestTwap);
 app.get('/twap-range', mongoFunctions.getTwapRange);
 app.get('/twap', mongoFunctions.getTwaps);
-app.get('/twap/pair/:asset', function (req, res) {
+app.get('/twap/pair/:address', function (req, res) {
   mongoFunctions.getTwapsWithParam(req.params)
 })
 

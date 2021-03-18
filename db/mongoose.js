@@ -252,9 +252,9 @@ const getTwaps = async (req, res, next) => {
 };
 
 const getTwapsWithParam = async (req, res, next) => {
-  const passedAsset = req.asset;
+  const passedAddress = req.address;
   const twaps = await Twap.find(
-    { asset: { $eq: passedAsset } }
+    { asset: { $eq: passedAddress } }
   ).select("timestamp price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
