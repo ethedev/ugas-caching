@@ -293,7 +293,7 @@ const twapCreation = async (req, res, next) => {
     // Array of all uniswap pool addresses.
     const assetPairArray = ["0x25fb29D865C1356F9e95D621F21366d3a5DB6BB0"];
     let priceFeed;
-    for (assetPairAddress in assetPairArray) {
+    for (let assetPairAddress in assetPairArray) {
       try {
         priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairAddress);
       } catch (err) {
