@@ -295,7 +295,7 @@ const twapCreation = async (req, res, next) => {
     let priceFeed;
     for (const assetPairAddress in assetPairArray) {
       try {
-        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairAddress);
+        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairArray[assetPairAddress]);
       } catch (err) {
         console.log(err);
       }
@@ -304,7 +304,7 @@ const twapCreation = async (req, res, next) => {
       time = time * 1000;
     
       const createdTwap = new Twap({
-        asset: assetPairAddress,
+        asset: assetPairArray[assetPairAddress],
         timestamp: time,
         price: price,
       });
