@@ -47,7 +47,10 @@ app.get('/twap-range', mongoFunctions.getTwapRange);
 app.get('/twap', mongoFunctions.getTwaps);
 app.get('/twap/pair/:address', function (req, res) {
   mongoFunctions.getTwapsWithParam(req.params)
-})
+});
+app.get('/current-twap/pair/:address', function (req, res) {
+  mongoFunctions.getLatestTwapWithParam(req.params)
+});
 
 // other
 app.get('/index', mongoFunctions.getIndex);

@@ -266,6 +266,15 @@ const getTwapsWithParam = async (req, res, next) => {
   res.json(theResults);
 }
 
+const getLatestTwapWithParam = async (req, res, next) => {
+  const passedAddress = req.address;
+  const twaps = await Twap.find(
+    { address: { $eq: passedAddress } }
+  ).select("timestamp price").exec();
+
+  res.json(twaps[twaps.length - 1] || {});
+}
+
 const getTwapRange = async (req, res, next) => {
     let currentTime = new Date();
     let earlierTime = currentTime - 259200000;
@@ -309,9 +318,10 @@ const twapCreation = async (req, res, next) => {
         price: price,
       });
       console.log(createdTwap);
+
+      await createdTwap.save();
     }
   
-    await createdTwap.save();
   };
 
 exports.createMedian = createMedian;
@@ -324,5 +334,6 @@ exports.getTwapsWithParam = getTwapsWithParam;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
 exports.getLatestTwap = getLatestTwap;
+exports.getLatestTwapWithParam = getLatestTwapWithParam;
 exports.getTwapRange = getTwapRange;
 exports.getMedianRange = getMedianRange;
