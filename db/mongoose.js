@@ -291,7 +291,13 @@ const getLatestTwap = async (req, res, next) => {
 
 const twapCreation = async (req, res, next) => {
     // Array of all uniswap pool addresses.
-    const assetPairArray = ["0x25fb29D865C1356F9e95D621F21366d3a5DB6BB0"];
+    const assetPairArray = [
+        "0x25fb29d865c1356f9e95d621f21366d3a5db6bb0",
+        "0x4a8a2ea3718964ed0551a3191c30e49ea38a5ade",
+        "0x683ea972ffa19b7bad6d6be0440e0a8465dba71c",
+        "0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873",
+        "0xedf187890af846bd59f560827ebd2091c49b75df",
+    ];
     let priceFeed;
     for (const assetPairAddress in assetPairArray) {
       try {
@@ -304,15 +310,13 @@ const twapCreation = async (req, res, next) => {
       time = time * 1000;
     
       const createdTwap = new Twap({
-        asset: assetPairArray[assetPairAddress],
+        address: assetPairArray[assetPairAddress],
         timestamp: time,
         price: price,
       });
-      console.log(createdTwap);
+      await createdTwap.save();
     }
-  
-    await createdTwap.save();
-  };
+};
 
 exports.createMedian = createMedian;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
