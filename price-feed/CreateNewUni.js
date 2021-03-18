@@ -4,7 +4,6 @@ const { Networker } = require("./Networker");
 const { Logger } = require("./Logger");
 
 // Constants
-const UNISWAP_ADDRESS = "0x25fb29D865C1356F9e95D621F21366d3a5DB6BB0";
 const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 const INVERTED = false;
 const TWAP_LENGTH = 7200;
@@ -13,10 +12,10 @@ const web3 = new Web3(INFURA_URL);
 const networker = new Networker();
 const getTime = () => Math.floor(Date.now() / 1000);
 
-async function createUniPriceFeed() {
+async function createUniPriceFeed(assetPairAddress) {
   const pf = await createPriceFeed(Logger, web3, networker, getTime, {
     type: "uniswap",
-    uniswapAddress: UNISWAP_ADDRESS,
+    uniswapAddress: assetPairAddress,
     invertPrice: INVERTED,
     lookback: 0,
     twapLength: TWAP_LENGTH,
@@ -24,11 +23,11 @@ async function createUniPriceFeed() {
   return pf;
 }
 
-async function usePriceFeed() {
+async function usePriceFeed(assetPairAddress) {
   let priceFeed;
 
   try {
-    priceFeed = await createUniPriceFeed();
+    priceFeed = await createUniPriceFeed(assetPairAddress);
   } catch (err) {
     console.log(err);
   }

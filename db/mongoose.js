@@ -290,23 +290,26 @@ const getLatestTwap = async (req, res, next) => {
   };
 
 const twapCreation = async (req, res, next) => {
+    // Array of all uniswap pool addresses.
+    const assetPairArray = ["0x25fb29D865C1356F9e95D621F21366d3a5DB6BB0"];
     let priceFeed;
-    try {
-      // TODO: Pass asset param if specified.
-      priceFeed = await TestingUniPriceFunctions.usePriceFeed();
-    } catch (err) {
-      console.log(err);
+    for (assetPairAddress in assetPairArray) {
+      try {
+        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairAddress);
+      } catch (err) {
+        console.log(err);
+      }
+      let price = priceFeed.getCurrentPrice().toString();
+      let time = priceFeed.lastUpdateTime;
+      time = time * 1000;
+    
+      const createdTwap = new Twap({
+        asset: assetPairAddress,
+        timestamp: time,
+        price: price,
+      });
+      console.log(createdTwap);
     }
-    let price = priceFeed.getCurrentPrice().toString();
-    let time = priceFeed.lastUpdateTime;
-    time = time * 1000;
-  
-    // TODO: Pass asset param if specified.
-    const createdTwap = new Twap({
-      timestamp: time,
-      price: price,
-    });
-    console.log(createdTwap);
   
     await createdTwap.save();
   };
