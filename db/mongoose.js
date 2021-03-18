@@ -241,7 +241,7 @@ const getLatestMedian = async (req, res, next) => {
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find().select("timestamp price").exec();
+  const twaps = await Twap.find().select("timestamp address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -255,7 +255,7 @@ const getTwapsWithParam = async (req, res, next) => {
   const passedAddress = req.address;
   const twaps = await Twap.find(
     { address: { $eq: passedAddress } }
-  ).select("timestamp price").exec();
+  ).select("timestamp address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -266,14 +266,15 @@ const getTwapsWithParam = async (req, res, next) => {
   res.json(theResults);
 }
 
-const getLatestTwapWithParam = async (req, res, next) => {
-  const passedAddress = req.address;
-  const twaps = await Twap.find(
-    { address: { $eq: passedAddress } }
-  ).select("timestamp price").exec();
 
-  res.json(twaps[twaps.length - 1] || {});
+const getLatestTwapWithParam = async (req, res, next) => {
+    const passedAddress = req.params.address;
+    const twaps = await Twap.find(
+        { address: { $eq: passedAddress } }
+    ).select("timestamp address price").exec();
+    res.json(twaps[twaps.length - 1] || {});
 }
+
 
 const getTwapRange = async (req, res, next) => {
     let currentTime = new Date();
