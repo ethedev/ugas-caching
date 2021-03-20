@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Web3 = require("web3");
-import EMPContract from "../abi/emp.json";
+const EMPContract = require("../abi/emp.json");
 const { BigQuery } = require("@google-cloud/bigquery");
 const highland = require("highland");
 const moment = require("moment");
