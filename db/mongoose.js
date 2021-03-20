@@ -243,20 +243,21 @@ const getLatestMedian = async (req, res, next) => {
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find().select("timestamp asset address price").exec();
+  const twaps = await Twap.find({_id: 0}).select("timestamp asset address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
       theResults.push(twaps[i]);
     // }
   }
-  res.json(theResults.filter(element => element.key != "_id"));
+  res.json(theResults);
 };
 
 const getTwapsWithParam = async (req, res, next) => {
   const passedAddress = req.params.address;
   const twaps = await Twap.find(
-    { address: { $eq: passedAddress } }
+    { address: { $eq: passedAddress } },
+    {_id: 0}
   ).select("timestamp asset address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
@@ -265,16 +266,17 @@ const getTwapsWithParam = async (req, res, next) => {
     // }
   }
 
-  res.json(theResults.filter(element => element.key != "_id"));
+  res.json(theResults);
 }
 
 
 const getLatestTwapWithParam = async (req, res, next) => {
     const passedAddress = req.params.address;
     const twaps = await Twap.find(
-        { address: { $eq: passedAddress } }
+        { address: { $eq: passedAddress } },
+        {_id: 0}
     ).select("timestamp asset address price").exec();
-    res.json(twaps[twaps.length - 1].filter(element => element.key != "_id") || {});
+    res.json(twaps[twaps.length - 1] || {});
 }
 
 
