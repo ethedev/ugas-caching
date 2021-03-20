@@ -28,7 +28,7 @@ cron.schedule('*/5 * * * *', function() {
 // add cleaner
 
 // twap cleaner
-cron.schedule('0 * * * *', function() {
+cron.schedule('* * * * 0', function() {
     console.log("running twap cleaner cron")
     mongoFunctions.twapCleaner();
 });
