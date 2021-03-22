@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { BigQuery } = require("@google-cloud/bigquery");
 const highland = require("highland");
 const moment = require("moment");
+const fetch = require("node-fetch");
 
 const GasMedian = require("../models/median");
 const Twap = require("../models/twap");
@@ -12,6 +13,7 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 const client = new BigQuery();
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const assetURI = "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
 
 mongoose
   .connect(
@@ -241,7 +243,7 @@ const getLatestMedian = async (req, res, next) => {
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find().select("timestamp address price").exec();
+  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -254,8 +256,9 @@ const getTwaps = async (req, res, next) => {
 const getTwapsWithParam = async (req, res, next) => {
   const passedAddress = req.params.address;
   const twaps = await Twap.find(
-    { address: { $eq: passedAddress } }
-  ).select("timestamp address price").exec();
+    { address: { $eq: passedAddress } },
+    { _id: 0 }
+  ).select("timestamp asset address price").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -270,8 +273,9 @@ const getTwapsWithParam = async (req, res, next) => {
 const getLatestTwapWithParam = async (req, res, next) => {
     const passedAddress = req.params.address;
     const twaps = await Twap.find(
-        { address: { $eq: passedAddress } }
-    ).select("timestamp address price").exec();
+        { address: { $eq: passedAddress } },
+        { _id: 0 }
+    ).select("timestamp asset address price").exec();
     res.json(twaps[twaps.length - 1] || {});
 }
 
@@ -300,18 +304,24 @@ const getLatestTwap = async (req, res, next) => {
   };
 
 const twapCreation = async (req, res, next) => {
-    // Array of all uniswap pool addresses.
-    const assetPairArray = [
-        "0x25fb29d865c1356f9e95d621f21366d3a5db6bb0",
-        "0x4a8a2ea3718964ed0551a3191c30e49ea38a5ade",
-        "0x683ea972ffa19b7bad6d6be0440e0a8465dba71c",
-        "0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873",
-        "0xedf187890af846bd59f560827ebd2091c49b75df",
-    ];
     let priceFeed;
+    const assetPairArray = [];
+    const response = await fetch(assetURI);
+    const data = await response.json();
+    
+    for (const assets in data) {
+      const assetDetails = data[assets];
+      for (const asset in assetDetails) {
+        assetPairArray.push({
+          key: `${assets} ${assetDetails[asset].cycle}${assetDetails[asset].year}`,
+          value: assetDetails[asset].pool.address
+        });
+      }
+    }
+  
     for (const assetPairAddress in assetPairArray) {
       try {
-        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairArray[assetPairAddress]);
+        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairArray[assetPairAddress].value);
       } catch (err) {
         console.log(err);
       }
@@ -320,7 +330,8 @@ const twapCreation = async (req, res, next) => {
       time = time * 1000;
     
       const createdTwap = new Twap({
-        address: assetPairArray[assetPairAddress],
+        asset: assetPairArray[assetPairAddress].key,
+        address: assetPairArray[assetPairAddress].value,
         timestamp: time,
         price: price,
       });
