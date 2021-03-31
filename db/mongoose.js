@@ -32,7 +32,7 @@ const createMedian = async (req, res, next) => {
 
   const createdMedian = new GasMedian({
     timestamp: medianValue[0],
-    price: medianValue[1],
+    price: medianValue[1].toString(),
   });
 
   await createdMedian.save();
@@ -44,7 +44,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
 
   const fetchedIndex = new Index({
     timestamp: indexValue[0],
-    price: indexValue[1],
+    price: indexValue[1].toString(),
   });
 
   await fetchedIndex.save();
@@ -326,7 +326,7 @@ const twapCreation = async (req, res, next) => {
       } catch (err) {
         console.log(err);
       }
-      let price = priceFeed.getCurrentPrice().toString();
+      let price = priceFeed.getCurrentPrice();
       let time = priceFeed.lastUpdateTime;
       time = time * 1000;
 
@@ -338,7 +338,7 @@ const twapCreation = async (req, res, next) => {
         asset: assetPairArray[assetPairAddress].key,
         address: assetPairArray[assetPairAddress].value,
         timestamp: time,
-        price: price,
+        price: price.toString(),
       });
       await createdTwap.save();
     }
