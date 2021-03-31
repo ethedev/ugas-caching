@@ -328,6 +328,10 @@ const twapCreation = async (req, res, next) => {
       let price = priceFeed.getCurrentPrice().toString();
       let time = priceFeed.lastUpdateTime;
       time = time * 1000;
+
+      if (assetPairAddress == "0xedf187890af846bd59f560827ebd2091c49b75df") {
+        price = 1 / price;
+      }
     
       const createdTwap = new Twap({
         asset: assetPairArray[assetPairAddress].key,
