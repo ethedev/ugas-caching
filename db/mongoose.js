@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Web3 = require("web3");
+const EMPContract = require("../abi/emp.json");
 const { BigQuery } = require("@google-cloud/bigquery");
 const highland = require("highland");
 const moment = require("moment");
@@ -14,6 +16,8 @@ const client = new BigQuery();
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const assetURI = "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
+const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
+const web3 = new Web3(INFURA_URL);
 
 mongoose
   .connect(
@@ -201,6 +205,26 @@ const getMedians = async (req, res, next) => {
     res.json(theResults);
 };
 
+const twapCleaner = async () => {
+  const response = await fetch(assetURI);
+  const data = await response.json();
+  
+  for (const assets in data) {
+    const assetDetails = data[assets];
+    for (const asset in assetDetails) {
+      const empContract = new web3.eth.Contract(EMPContract.abi, assetDetails[asset].emp.address);
+      const currentContractTime = await empContract.methods.getCurrentTime().call();
+      const expirationTimestamp = await empContract.methods.expirationTimestamp().call();
+      const isExpired = Number(currentContractTime) >= Number(expirationTimestamp);
+      var bulk = await Twap.initializeUnorderedBulkOp();
+
+      if (isExpired) {
+        await bulk.find( { address: assetDetails[asset].token.address } ).remove().exec();
+      }
+    }
+  }
+}
+
 const getIndex = async (req, res, next) => {
   const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
   let theResults = [];
@@ -351,6 +375,7 @@ exports.getMedians = getMedians;
 exports.getIndex = getIndex;
 exports.getLatestIndex = getLatestIndex;
 exports.getTwaps = getTwaps;
+exports.twapCleaner = twapCleaner;
 exports.getTwapsWithParam = getTwapsWithParam;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
