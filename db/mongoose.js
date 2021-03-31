@@ -190,7 +190,7 @@ async function fetchIndex() {
 }
 
 const getMedians = async (req, res, next) => {
-  const medians = await GasMedian.find().select("timestamp price").exec();
+  const medians = await GasMedian.find({}, { _id: 0 }).select("timestamp price").exec();
   let theResults = [];
   for (let i = 0; i < medians.length; i++) {
     // if (i % 2 == 0) {
@@ -202,7 +202,7 @@ const getMedians = async (req, res, next) => {
 };
 
 const getIndex = async (req, res, next) => {
-  const index = await Index.find().select("timestamp price").exec();
+  const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
@@ -214,7 +214,7 @@ const getIndex = async (req, res, next) => {
 };
 
 const getLatestIndex = async (req, res, next) => {
-  const index = await Index.find().select("timestamp price").exec();
+  const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
   res.json(index[index.length - 1] || {});
 };
 
@@ -237,7 +237,7 @@ const getMedianRange = async (req, res, next) => {
   };
 
 const getLatestMedian = async (req, res, next) => {
-  const medians = await GasMedian.find().select("timestamp price").exec();
+  const medians = await GasMedian.find({}, { _id: 0 }).select("timestamp price").exec();
 
   res.json(medians[medians.length - 1]);
 };
@@ -285,7 +285,8 @@ const getTwapRange = async (req, res, next) => {
     let earlierTime = currentTime - 259200000;
 
     const twaps = await Twap.find(
-        { timestamp: { $gte: earlierTime, $lte: currentTime} }
+        { timestamp: { $gte: earlierTime, $lte: currentTime} },
+        { _id: 0 }
     ).select("timestamp price").exec();
     
     
@@ -299,7 +300,7 @@ const getTwapRange = async (req, res, next) => {
   };
 
 const getLatestTwap = async (req, res, next) => {
-    const twaps = await Twap.find().select("timestamp price").exec();
+    const twaps = await Twap.find({}, { _id: 0 }).select("timestamp price").exec();
     res.json(twaps[twaps.length - 1] || {});
   };
 
