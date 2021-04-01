@@ -330,7 +330,7 @@ const twapCreation = async (req, res, next) => {
       let time = priceFeed.lastUpdateTime;
       time = time * 1000;
 
-      if (assetPairAddress == "0xedf187890af846bd59f560827ebd2091c49b75df") {
+      if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
         price = 1 / price;
       }
     
