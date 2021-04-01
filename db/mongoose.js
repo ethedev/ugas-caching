@@ -315,7 +315,7 @@ const twapCreation = async (req, res, next) => {
       const assetDetails = data[assets];
       for (const asset in assetDetails) {
         assetPairArray.push({
-          key: `${assets} ${assetDetails[asset].cycle}${assetDetails[asset].year}`,
+          key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
           value: assetDetails[asset].pool.address
         });
       }
