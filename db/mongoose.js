@@ -5,6 +5,7 @@ const { BigQuery } = require("@google-cloud/bigquery");
 const highland = require("highland");
 const moment = require("moment");
 const fetch = require("node-fetch");
+const BigNumber = require("bignumber.js");
 
 const GasMedian = require("../models/median");
 const Twap = require("../models/twap");
@@ -350,12 +351,12 @@ const twapCreation = async (req, res, next) => {
       } catch (err) {
         console.log(err);
       }
-      let price = priceFeed.getCurrentPrice();
+      let price = new BigNumber(priceFeed.getCurrentPrice());
       let time = priceFeed.lastUpdateTime;
       time = time * 1000;
 
-      if (assetPairAddress == "0xedf187890af846bd59f560827ebd2091c49b75df") {
-        price = 1 / price;
+      if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
+        price = new BigNumber(1).dividedBy(price);
       }
     
       const createdTwap = new Twap({
