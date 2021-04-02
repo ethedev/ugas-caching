@@ -25,13 +25,11 @@ cron.schedule('*/5 * * * *', function() {
     mongoFunctions.getIndexFromSpreadsheet();
 });
 
-// add cleaner
-
 // twap cleaner
-cron.schedule('* * * * 0', function() {
-    console.log("running twap cleaner cron")
-    mongoFunctions.twapCleaner();
-});
+// cron.schedule('* * * * 0', function() {
+//     console.log("running twap cleaner cron")
+//     mongoFunctions.twapCleaner();
+// });
 
 app.use(bodyParser.json());
 
