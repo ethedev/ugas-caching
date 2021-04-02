@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Web3 = require("web3");
+const EMPContract = require("../abi/emp.json");
 const { BigQuery } = require("@google-cloud/bigquery");
 const highland = require("highland");
 const moment = require("moment");
@@ -15,6 +17,8 @@ const client = new BigQuery();
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const assetURI = "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
+const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
+const web3 = new Web3(INFURA_URL);
 
 mongoose
   .connect(
@@ -202,6 +206,26 @@ const getMedians = async (req, res, next) => {
     res.json(theResults);
 };
 
+const twapCleaner = async () => {
+  const response = await fetch(assetURI);
+  const data = await response.json();
+  
+  for (const assets in data) {
+    const assetDetails = data[assets];
+    for (const asset in assetDetails) {
+      const empContract = new web3.eth.Contract(EMPContract.abi, assetDetails[asset].emp.address);
+      const currentContractTime = await empContract.methods.getCurrentTime().call();
+      const expirationTimestamp = await empContract.methods.expirationTimestamp().call();
+      const isExpired = Number(currentContractTime) >= Number(expirationTimestamp);
+      var bulk = await Twap.initializeUnorderedBulkOp();
+
+      if (isExpired) {
+        await bulk.find( { address: assetDetails[asset].token.address } ).remove().exec();
+      }
+    }
+  }
+}
+
 const getIndex = async (req, res, next) => {
   const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
   let theResults = [];
@@ -244,7 +268,7 @@ const getLatestMedian = async (req, res, next) => {
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price").exec();
+  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price collateral roundingDecimals").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -259,7 +283,7 @@ const getTwapsWithParam = async (req, res, next) => {
   const twaps = await Twap.find(
     { address: { $eq: passedAddress } },
     { _id: 0 }
-  ).select("timestamp asset address price").exec();
+  ).select("timestamp asset address price collateral roundingDecimals").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -276,7 +300,7 @@ const getLatestTwapWithParam = async (req, res, next) => {
     const twaps = await Twap.find(
         { address: { $eq: passedAddress } },
         { _id: 0 }
-    ).select("timestamp asset address price").exec();
+    ).select("timestamp asset address price collateral roundingDecimals").exec();
     res.json(twaps[twaps.length - 1] || {});
 }
 
@@ -307,6 +331,7 @@ const getLatestTwap = async (req, res, next) => {
 
 const twapCreation = async (req, res, next) => {
     let priceFeed;
+    let roundingDecimals;
     const assetPairArray = [];
     const response = await fetch(assetURI);
     const data = await response.json();
@@ -316,7 +341,8 @@ const twapCreation = async (req, res, next) => {
       for (const asset in assetDetails) {
         assetPairArray.push({
           key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
-          value: assetDetails[asset].pool.address
+          value: assetDetails[asset].pool.address, 
+          collateral: assetDetails[asset].collateral,
         });
       }
     }
@@ -333,6 +359,11 @@ const twapCreation = async (req, res, next) => {
 
       if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
         price = new BigNumber(1).dividedBy(price);
+        price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
+        roundingDecimals = 2;
+      } else {
+        price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
+        roundingDecimals = 4;
       }
     
       const createdTwap = new Twap({
@@ -340,6 +371,8 @@ const twapCreation = async (req, res, next) => {
         address: assetPairArray[assetPairAddress].value,
         timestamp: time,
         price: price.toString(),
+        collateral: assetPairArray[assetPairAddress].collateral,
+        roundingDecimals: roundingDecimals
       });
       await createdTwap.save();
     }
@@ -352,6 +385,7 @@ exports.getMedians = getMedians;
 exports.getIndex = getIndex;
 exports.getLatestIndex = getLatestIndex;
 exports.getTwaps = getTwaps;
+exports.twapCleaner = twapCleaner;
 exports.getTwapsWithParam = getTwapsWithParam;
 exports.getLatestMedian = getLatestMedian;
 exports.twapCreation = twapCreation;
