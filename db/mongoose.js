@@ -340,7 +340,9 @@ const twapCreation = async (req, res, next) => {
       for (const asset in assetDetails) {
         assetPairArray.push({
           key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
-          value: assetDetails[asset].pool.address
+          value: assetDetails[asset].pool.address, 
+          collateral: assetDetails[asset].collateral,
+          decimals: assetDetails[asset].token.decimals
         });
       }
     }
@@ -357,6 +359,9 @@ const twapCreation = async (req, res, next) => {
 
       if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
         price = new BigNumber(1).dividedBy(price);
+        price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
+      } else {
+        price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
       }
     
       const createdTwap = new Twap({
@@ -364,6 +369,8 @@ const twapCreation = async (req, res, next) => {
         address: assetPairArray[assetPairAddress].value,
         timestamp: time,
         price: price.toString(),
+        collateral: assetPairArray[assetPairAddress].collateral,
+        decimals: assetPairArray[assetPairAddress].decimals
       });
       await createdTwap.save();
     }
