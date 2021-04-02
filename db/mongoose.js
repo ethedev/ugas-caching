@@ -268,7 +268,7 @@ const getLatestMedian = async (req, res, next) => {
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price").exec();
+  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price collateral roundingDecimals").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -283,7 +283,7 @@ const getTwapsWithParam = async (req, res, next) => {
   const twaps = await Twap.find(
     { address: { $eq: passedAddress } },
     { _id: 0 }
-  ).select("timestamp asset address price").exec();
+  ).select("timestamp asset address price collateral roundingDecimals").exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
@@ -300,7 +300,7 @@ const getLatestTwapWithParam = async (req, res, next) => {
     const twaps = await Twap.find(
         { address: { $eq: passedAddress } },
         { _id: 0 }
-    ).select("timestamp asset address price").exec();
+    ).select("timestamp asset address price collateral roundingDecimals").exec();
     res.json(twaps[twaps.length - 1] || {});
 }
 
@@ -331,6 +331,7 @@ const getLatestTwap = async (req, res, next) => {
 
 const twapCreation = async (req, res, next) => {
     let priceFeed;
+    let roundingDecimals;
     const assetPairArray = [];
     const response = await fetch(assetURI);
     const data = await response.json();
@@ -342,7 +343,6 @@ const twapCreation = async (req, res, next) => {
           key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
           value: assetDetails[asset].pool.address, 
           collateral: assetDetails[asset].collateral,
-          decimals: assetDetails[asset].token.decimals
         });
       }
     }
@@ -360,8 +360,10 @@ const twapCreation = async (req, res, next) => {
       if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
         price = new BigNumber(1).dividedBy(price);
         price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
+        roundingDecimals = 2;
       } else {
         price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
+        roundingDecimals = 4;
       }
     
       const createdTwap = new Twap({
@@ -370,7 +372,7 @@ const twapCreation = async (req, res, next) => {
         timestamp: time,
         price: price.toString(),
         collateral: assetPairArray[assetPairAddress].collateral,
-        decimals: assetPairArray[assetPairAddress].decimals
+        roundingDecimals: roundingDecimals
       });
       await createdTwap.save();
     }
