@@ -307,7 +307,6 @@ const getLatestTwap = async (req, res, next) => {
 
 const twapCreation = async (req, res, next) => {
     let priceFeed;
-    let collateral;
     const assetPairArray = [];
     const response = await fetch(assetURI);
     const data = await response.json();
@@ -317,7 +316,8 @@ const twapCreation = async (req, res, next) => {
       for (const asset in assetDetails) {
         assetPairArray.push({
           key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
-          value: assetDetails[asset].pool.address
+          value: assetDetails[asset].pool.address, 
+          collateral: assetDetails[asset].collateral
         });
       }
     }
@@ -333,11 +333,9 @@ const twapCreation = async (req, res, next) => {
       time = time * 1000;
 
       if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
-        collateral = "USDC";
         price = new BigNumber(1).dividedBy(price);
         price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
       } else {
-        collateral = "ETH";
         price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
       }
     
@@ -346,7 +344,7 @@ const twapCreation = async (req, res, next) => {
         address: assetPairArray[assetPairAddress].value,
         timestamp: time,
         price: price.toString(),
-        collateral: collateral,
+        collateral: assetPairArray[assetPairAddress].collateral,
       });
       await createdTwap.save();
     }
