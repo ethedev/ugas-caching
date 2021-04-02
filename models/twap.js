@@ -6,7 +6,7 @@ const twapSchema = new mongoose.Schema({
     timestamp: { type: Date, require: true },
     price: { type: String, require: true},
     collateral: { type: String, require: false},
-    decimals: { type: String, require: false}
+    roundingDecimals: { type: String, require: false}
 });
 
 module.exports = mongoose.model('GasTwap', twapSchema);
