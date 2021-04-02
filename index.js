@@ -27,7 +27,11 @@ cron.schedule('*/5 * * * *', function() {
 
 // add cleaner
 
-// add twap cleaner, check expired asset.json and remove all
+// twap cleaner
+cron.schedule('* * * * 0', function() {
+    console.log("running twap cleaner cron")
+    mongoFunctions.twapCleaner();
+});
 
 app.use(bodyParser.json());
 
