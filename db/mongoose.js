@@ -317,7 +317,8 @@ const twapCreation = async (req, res, next) => {
         assetPairArray.push({
           key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
           value: assetDetails[asset].pool.address, 
-          collateral: assetDetails[asset].collateral
+          collateral: assetDetails[asset].collateral,
+          decimals: assetDetails[asset].token.decimals
         });
       }
     }
@@ -345,6 +346,7 @@ const twapCreation = async (req, res, next) => {
         timestamp: time,
         price: price.toString(),
         collateral: assetPairArray[assetPairAddress].collateral,
+        decimals: assetPairArray[assetPairAddress].decimals
       });
       await createdTwap.save();
     }

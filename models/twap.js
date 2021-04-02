@@ -5,7 +5,8 @@ const twapSchema = new mongoose.Schema({
     address: { type: String, require: false },
     timestamp: { type: Date, require: true },
     price: { type: String, require: true},
-    collateral: { type: String, require: true}
+    collateral: { type: String, require: false},
+    decimals: { type: String, require: false}
 });
 
 module.exports = mongoose.model('GasTwap', twapSchema);
