@@ -257,7 +257,7 @@ const getIndex = async (req, res, next) => {
 
 const getDailyIndex = async (req, res, next) => {
   let currentTime = new Date();
-  let earlierTime = currentTime - 86400;
+  let earlierTime = currentTime - 2629743;
 
   const index = await Index.find(
     {},
