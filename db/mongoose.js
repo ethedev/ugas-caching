@@ -11,24 +11,22 @@ const GasMedian = require("../models/median");
 const Twap = require("../models/twap");
 const Index = require("../models/indexValue");
 const TestingUniPriceFunctions = require("../price-feed/CreateNewUni");
-const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { GoogleSpreadsheet } = require("google-spreadsheet");
 
 const client = new BigQuery();
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-const assetURI = "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
+const assetURI =
+  "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
 const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 const web3 = new Web3(INFURA_URL);
 
 mongoose
-  .connect(
-    uri,
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("Connected to db");
   })
-  .catch(err => {
+  .catch((err) => {
     console.log(err);
   });
 
@@ -153,11 +151,14 @@ async function formatCurrentTime() {
     .utc()
     .format("YYYY-MM-DD HH:mm:ss");
 
-    return { formattedCurrentTime, formattedEarlierTimeBound };
+  return { formattedCurrentTime, formattedEarlierTimeBound };
 }
 
 async function runQuery() {
-  const { formattedCurrentTime, formattedEarlierTimeBound } = await formatCurrentTime();
+  const {
+    formattedCurrentTime,
+    formattedEarlierTimeBound,
+  } = await formatCurrentTime();
 
   let priceResponse;
 
@@ -195,47 +196,62 @@ async function fetchIndex() {
 }
 
 const getMedians = async (req, res, next) => {
-  const medians = await GasMedian.find({}, { _id: 0 }).select("timestamp price").exec();
+  const medians = await GasMedian.find({}, { _id: 0 })
+    .select("timestamp price")
+    .exec();
   let theResults = [];
   for (let i = 0; i < medians.length; i++) {
     // if (i % 2 == 0) {
-      theResults.push(medians[i]);
+    theResults.push(medians[i]);
     // }
   }
-    console.log("theResults", theResults)
-    res.json(theResults);
+  console.log("theResults", theResults);
+  res.json(theResults);
 };
 
 const twapCleaner = async () => {
   const response = await fetch(assetURI);
   const data = await response.json();
-  
+
   for (const assets in data) {
     const assetDetails = data[assets];
     for (const asset in assetDetails) {
-      const empContract = new web3.eth.Contract(EMPContract.abi, assetDetails[asset].emp.address);
-      const currentContractTime = await empContract.methods.getCurrentTime().call();
-      const expirationTimestamp = await empContract.methods.expirationTimestamp().call();
-      const isExpired = Number(currentContractTime) >= Number(expirationTimestamp);
+      const empContract = new web3.eth.Contract(
+        EMPContract.abi,
+        assetDetails[asset].emp.address
+      );
+      const currentContractTime = await empContract.methods
+        .getCurrentTime()
+        .call();
+      const expirationTimestamp = await empContract.methods
+        .expirationTimestamp()
+        .call();
+      const isExpired =
+        Number(currentContractTime) >= Number(expirationTimestamp);
       var bulk = await Twap.initializeUnorderedBulkOp();
 
       if (isExpired) {
-        await bulk.find( { address: assetDetails[asset].token.address } ).remove().exec();
+        await bulk
+          .find({ address: assetDetails[asset].token.address })
+          .remove()
+          .exec();
       }
     }
   }
-}
+};
 
 const getIndex = async (req, res, next) => {
-  const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
+  const index = await Index.find({}, { _id: 0 })
+    .select("timestamp price")
+    .exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
-      theResults.push(index[i]);
+    theResults.push(index[i]);
     // }
   }
 
-  console.log("theResults", theResults)
+  console.log("theResults", theResults);
   res.json(theResults);
 };
 
@@ -244,56 +260,64 @@ const getDailyIndex = async (req, res, next) => {
   let earlierTime = currentTime - 86400;
 
   const index = await Index.find(
-    {}, 
-    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime} }
-    )
-  .select("timestamp price").exec();
+    {},
+    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime } }
+  )
+    .select("timestamp price")
+    .exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
-      theResults.push(index[i]);
+    theResults.push(index[i]);
     // }
   }
 
-  console.log("theResults", theResults)
+  console.log("theResults", theResults);
   res.json(theResults);
 };
 
 const getLatestIndex = async (req, res, next) => {
-  const index = await Index.find({}, { _id: 0 }).select("timestamp price").exec();
+  const index = await Index.find({}, { _id: 0 })
+    .select("timestamp price")
+    .exec();
   res.json(index[index.length - 1] || {});
 };
 
 const getMedianRange = async (req, res, next) => {
-    let currentTime = new Date();
-    let earlierTime = currentTime - 259200000;
+  let currentTime = new Date();
+  let earlierTime = currentTime - 259200000;
 
-    const medians = await GasMedian.find(
-        { timestamp: { $gte: earlierTime, $lte: currentTime} }
-    ).select("timestamp price").exec();
+  const medians = await GasMedian.find({
+    timestamp: { $gte: earlierTime, $lte: currentTime },
+  })
+    .select("timestamp price")
+    .exec();
 
-    let theResults = [];
-    for (let i = 0; i < medians.length; i++) {
+  let theResults = [];
+  for (let i = 0; i < medians.length; i++) {
     //   if (i % 2 == 0) {
-        theResults.push(medians[i]);
+    theResults.push(medians[i]);
     //   }
-    }
-    res.json(theResults);
-
-  };
+  }
+  res.json(theResults);
+};
 
 const getLatestMedian = async (req, res, next) => {
-  const medians = await GasMedian.find({}, { _id: 0 }).select("timestamp price").exec();
+  const medians = await GasMedian.find({}, { _id: 0 })
+    .select("timestamp price")
+    .exec();
 
   res.json(medians[medians.length - 1]);
 };
 
 const getTwaps = async (req, res, next) => {
-  const twaps = await Twap.find({}, { _id: 0 }).select("timestamp asset address price collateral roundingDecimals").exec();
+  const twaps = await Twap.find({}, { _id: 0 })
+    .select("timestamp asset address price collateral roundingDecimals")
+    .exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
-      theResults.push(twaps[i]);
+    theResults.push(twaps[i]);
     // }
   }
   res.json(theResults);
@@ -301,104 +325,109 @@ const getTwaps = async (req, res, next) => {
 
 const getTwapsWithParam = async (req, res, next) => {
   const passedAddress = req.params.address;
-  const twaps = await Twap.find(
-    { address: { $eq: passedAddress } },
-    { _id: 0 }
-  ).select("timestamp asset address price collateral roundingDecimals").exec();
+  const twaps = await Twap.find({ address: { $eq: passedAddress } }, { _id: 0 })
+    .select("timestamp asset address price collateral roundingDecimals")
+    .exec();
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
-      theResults.push(twaps[i]);
+    theResults.push(twaps[i]);
     // }
   }
 
   res.json(theResults);
-}
-
+};
 
 const getLatestTwapWithParam = async (req, res, next) => {
-    const passedAddress = req.params.address;
-    const twaps = await Twap.find(
-        { address: { $eq: passedAddress } },
-        { _id: 0 }
-    ).select("timestamp asset address price collateral roundingDecimals").exec();
-    res.json(twaps[twaps.length - 1] || {});
-}
-
+  const passedAddress = req.params.address;
+  const twaps = await Twap.find({ address: { $eq: passedAddress } }, { _id: 0 })
+    .select("timestamp asset address price collateral roundingDecimals")
+    .exec();
+  res.json(twaps[twaps.length - 1] || {});
+};
 
 const getTwapRange = async (req, res, next) => {
-    let currentTime = new Date();
-    let earlierTime = currentTime - 259200000;
+  let currentTime = new Date();
+  let earlierTime = currentTime - 259200000;
 
-    const twaps = await Twap.find(
-        { timestamp: { $gte: earlierTime, $lte: currentTime} },
-        { _id: 0 }
-    ).select("timestamp price").exec();
-    
-    
-    let theResults = [];
-    for (let i = 0; i < twaps.length; i++) {
+  const twaps = await Twap.find(
+    { timestamp: { $gte: earlierTime, $lte: currentTime } },
+    { _id: 0 }
+  )
+    .select("timestamp price")
+    .exec();
+
+  let theResults = [];
+  for (let i = 0; i < twaps.length; i++) {
     //   if (i % 2 == 0) {
-        theResults.push(twaps[i]);
+    theResults.push(twaps[i]);
     //   }
-    }
-    res.json(theResults);
-  };
+  }
+  res.json(theResults);
+};
 
 const getLatestTwap = async (req, res, next) => {
-    const twaps = await Twap.find({}, { _id: 0 }).select("timestamp price").exec();
-    res.json(twaps[twaps.length - 1] || {});
-  };
+  const twaps = await Twap.find({}, { _id: 0 })
+    .select("timestamp price")
+    .exec();
+  res.json(twaps[twaps.length - 1] || {});
+};
 
 const twapCreation = async (req, res, next) => {
-    let priceFeed;
-    let roundingDecimals;
-    const assetPairArray = [];
-    const response = await fetch(assetURI);
-    const data = await response.json();
-    
-    for (const assets in data) {
-      const assetDetails = data[assets];
-      for (const asset in assetDetails) {
-        assetPairArray.push({
-          key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${assetDetails[asset].year}`,
-          value: assetDetails[asset].pool.address, 
-          collateral: assetDetails[asset].collateral,
-        });
-      }
-    }
-  
-    for (const assetPairAddress in assetPairArray) {
-      try {
-        priceFeed = await TestingUniPriceFunctions.usePriceFeed(assetPairArray[assetPairAddress].value);
-      } catch (err) {
-        console.log(err);
-      }
-      let price = new BigNumber(priceFeed.getCurrentPrice());
-      let time = priceFeed.lastUpdateTime;
-      time = time * 1000;
+  let priceFeed;
+  let roundingDecimals;
+  const assetPairArray = [];
+  const response = await fetch(assetURI);
+  const data = await response.json();
 
-      if (assetPairArray[assetPairAddress].value == "0xedf187890af846bd59f560827ebd2091c49b75df") {
-        price = new BigNumber(1).dividedBy(price);
-        price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
-        roundingDecimals = 2;
-      } else {
-        price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
-        roundingDecimals = 4;
-      }
-    
-      const createdTwap = new Twap({
-        asset: assetPairArray[assetPairAddress].key,
-        address: assetPairArray[assetPairAddress].value,
-        timestamp: time,
-        price: price.toString(),
-        collateral: assetPairArray[assetPairAddress].collateral,
-        roundingDecimals: roundingDecimals
+  for (const assets in data) {
+    const assetDetails = data[assets];
+    for (const asset in assetDetails) {
+      assetPairArray.push({
+        key: `${assets.toUpperCase()}-${assetDetails[asset].cycle}${
+          assetDetails[asset].year
+        }`,
+        value: assetDetails[asset].pool.address,
+        collateral: assetDetails[asset].collateral,
       });
-      await createdTwap.save();
+    }
+  }
+
+  for (const assetPairAddress in assetPairArray) {
+    try {
+      priceFeed = await TestingUniPriceFunctions.usePriceFeed(
+        assetPairArray[assetPairAddress].value
+      );
+    } catch (err) {
+      console.log(err);
+    }
+    let price = new BigNumber(priceFeed.getCurrentPrice());
+    let time = priceFeed.lastUpdateTime;
+    time = time * 1000;
+
+    if (
+      assetPairArray[assetPairAddress].value ==
+      "0xedf187890af846bd59f560827ebd2091c49b75df"
+    ) {
+      price = new BigNumber(1).dividedBy(price);
+      price = price.multipliedBy(new BigNumber(10).pow(18)).toFixed();
+      roundingDecimals = 2;
+    } else {
+      price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
+      roundingDecimals = 4;
     }
 
-  };
+    const createdTwap = new Twap({
+      asset: assetPairArray[assetPairAddress].key,
+      address: assetPairArray[assetPairAddress].value,
+      timestamp: time,
+      price: price.toString(),
+      collateral: assetPairArray[assetPairAddress].collateral,
+      roundingDecimals: roundingDecimals,
+    });
+    await createdTwap.save();
+  }
+};
 
 exports.createMedian = createMedian;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
