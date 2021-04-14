@@ -175,7 +175,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const { formattedCurrentTime } = await formatCurrentTime();
+  const currentTime = new Date();
 
   let priceResponse;
 
@@ -192,7 +192,7 @@ async function fetchIndex() {
     console.error(error);
   }
 
-  return [formattedCurrentTime, priceResponse];
+  return [currentTime, priceResponse];
 }
 
 const getMedians = async (req, res, next) => {
