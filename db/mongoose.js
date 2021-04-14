@@ -235,8 +235,8 @@ const getIndex = async (req, res, next) => {
     // }
   }
 
-  console.log("theResults", theResults.slice(-30))
-  res.json(theResults);
+  console.log("theResults", theResults)
+  res.json(theResults.slice(-30));
 };
 
 const getLatestIndex = async (req, res, next) => {
