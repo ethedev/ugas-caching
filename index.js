@@ -58,5 +58,6 @@ app.get('/twap-history/pair/:address', mongoFunctions.getTwapsWithParam);
 // other
 app.get('/ustonks/index', mongoFunctions.getLatestIndex);
 app.get('/ustonks/index-history', mongoFunctions.getIndex);
+app.get('/ustonks/index-history-daily', mongoFunctions.getDailyIndex);
 
 app.listen(8080);

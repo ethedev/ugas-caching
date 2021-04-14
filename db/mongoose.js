@@ -236,7 +236,27 @@ const getIndex = async (req, res, next) => {
   }
 
   console.log("theResults", theResults)
-  res.json(theResults.slice(-30));
+  res.json(theResults);
+};
+
+const getDailyIndex = async (req, res, next) => {
+  let currentTime = new Date();
+  let earlierTime = currentTime - 86400;
+
+  const index = await Index.find(
+    {}, 
+    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime} }
+    )
+  .select("timestamp price").exec();
+  let theResults = [];
+  for (let i = 0; i < index.length; i++) {
+    // if (i % 2 == 0) {
+      theResults.push(index[i]);
+    // }
+  }
+
+  console.log("theResults", theResults)
+  res.json(theResults);
 };
 
 const getLatestIndex = async (req, res, next) => {
@@ -384,6 +404,7 @@ exports.createMedian = createMedian;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
 exports.getMedians = getMedians;
 exports.getIndex = getIndex;
+exports.getDailyIndex = getDailyIndex;
 exports.getLatestIndex = getLatestIndex;
 exports.getTwaps = getTwaps;
 exports.twapCleaner = twapCleaner;
