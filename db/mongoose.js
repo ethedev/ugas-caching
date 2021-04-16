@@ -257,7 +257,7 @@ const getIndex = async (req, res, next) => {
 
 const getDailyIndex = async (req, res, next) => {
   let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentTime - 86400000;
+  let earlierUnixTime = currentUnixTime - 86400000;
 
   const index = await Index.find(
     {},
@@ -285,7 +285,7 @@ const getLatestIndex = async (req, res, next) => {
 
 const getMedianRange = async (req, res, next) => {
   let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentTime - 259200000;
+  let earlierUnixTime = currentUnixTime - 259200000;
 
   const medians = await GasMedian.find({
     timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime },
@@ -348,7 +348,7 @@ const getLatestTwapWithParam = async (req, res, next) => {
 
 const getTwapRange = async (req, res, next) => {
   let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentTime - 259200000;
+  let earlierUnixTime = currentUnixTime - 259200000;
 
   const twaps = await Twap.find(
     { timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } },
