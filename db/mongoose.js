@@ -404,7 +404,6 @@ const twapCreation = async (req, res, next) => {
     }
     let price = new BigNumber(priceFeed.getCurrentPrice());
     let time = priceFeed.lastUpdateTime;
-    time = time * 1000;
 
     if (
       assetPairArray[assetPairAddress].value ==
