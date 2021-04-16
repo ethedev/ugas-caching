@@ -34,7 +34,7 @@ const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
 
   const createdMedian = new GasMedian({
-    timestamp: medianValue[0],
+    timestamp: medianValue[0].getTime(),
     price: medianValue[1].toString(),
   });
 
@@ -46,7 +46,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
-    timestamp: indexValue[0],
+    timestamp: indexValue[0].getTime(),
     price: indexValue[1].toString(),
   });
 
@@ -256,12 +256,12 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentTime = new Date();
-  let earlierTime = currentTime - 2629743;
+  let currentUnixTime = new Date().getTime();
+  let earlierUnixTime = currentTime - 86400000;
 
   const index = await Index.find(
     {},
-    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime } }
+    { _id: 0, timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } }
   )
     .select("timestamp price")
     .exec();
@@ -284,11 +284,11 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentTime = new Date();
-  let earlierTime = currentTime - 259200000;
+  let currentUnixTime = new Date().getTime();
+  let earlierUnixTime = currentTime - 259200000;
 
   const medians = await GasMedian.find({
-    timestamp: { $gte: earlierTime, $lte: currentTime },
+    timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime },
   })
     .select("timestamp price")
     .exec();
@@ -347,11 +347,11 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentTime = new Date();
-  let earlierTime = currentTime - 259200000;
+  let currentUnixTime = new Date().getTime();
+  let earlierUnixTime = currentTime - 259200000;
 
   const twaps = await Twap.find(
-    { timestamp: { $gte: earlierTime, $lte: currentTime } },
+    { timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } },
     { _id: 0 }
   )
     .select("timestamp price")
@@ -420,7 +420,7 @@ const twapCreation = async (req, res, next) => {
     const createdTwap = new Twap({
       asset: assetPairArray[assetPairAddress].key,
       address: assetPairArray[assetPairAddress].value,
-      timestamp: time,
+      timestamp: time.getTime(),
       price: price.toString(),
       collateral: assetPairArray[assetPairAddress].collateral,
       roundingDecimals: roundingDecimals,
