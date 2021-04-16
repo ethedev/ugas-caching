@@ -32,7 +32,7 @@ mongoose
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
-  const currentUnixTime = new Date().getTime();
+  const currentUnixTime = new Date().getTime() / 1000;
 
   const createdMedian = new GasMedian({
     timestamp: currentUnixTime,
@@ -47,7 +47,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
-    timestamp: indexValue[0].getTime(),
+    timestamp: indexValue[0].getTime() / 1000,
     price: indexValue[1].toString(),
   });
 
@@ -257,8 +257,8 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentUnixTime - 86400000;
+  let currentUnixTime = new Date().getTime() / 1000;
+  let earlierUnixTime = currentUnixTime - 86400;
 
   const index = await Index.find(
     {},
@@ -285,8 +285,8 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentUnixTime - 259200000;
+  let currentUnixTime = new Date().getTime() / 1000;
+  let earlierUnixTime = currentUnixTime - 2629743;
 
   const medians = await GasMedian.find({
     timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime },
@@ -348,8 +348,8 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime();
-  let earlierUnixTime = currentUnixTime - 259200000;
+  let currentUnixTime = new Date().getTime() / 1000;
+  let earlierUnixTime = currentUnixTime - 2629743;
 
   const twaps = await Twap.find(
     { timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } },
@@ -421,7 +421,7 @@ const twapCreation = async (req, res, next) => {
     const createdTwap = new Twap({
       asset: assetPairArray[assetPairAddress].key,
       address: assetPairArray[assetPairAddress].value,
-      timestamp: time.getTime(),
+      timestamp: time,
       price: price.toString(),
       collateral: assetPairArray[assetPairAddress].collateral,
       roundingDecimals: roundingDecimals,
