@@ -32,9 +32,10 @@ mongoose
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
+  const currentUnixTime = new Date().getTime();
 
   const createdMedian = new GasMedian({
-    timestamp: medianValue[0].getTime(),
+    timestamp: currentUnixTime,
     price: medianValue[1].toString(),
   });
 
