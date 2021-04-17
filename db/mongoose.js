@@ -47,7 +47,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
-    timestamp: indexValue[0].getTime(),
+    timestamp: indexValue[0],
     price: indexValue[1].toString(),
   });
 
