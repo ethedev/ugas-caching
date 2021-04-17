@@ -279,7 +279,6 @@ const getDailyIndex = async (req, res, next) => {
     // }
   }
 
-  const delta = Math.floor(theResults.length / 288);
   let finalResults = [];
   let dayCount  = 0;
 
