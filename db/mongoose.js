@@ -274,7 +274,7 @@ const getDailyIndex = async (req, res, next) => {
     obj["timestamp"] = index[i]["timestamp"];
     obj["price"] = index[i]["price"];
 
-    theResults.push(index[i]);
+    theResults.push(obj);
     // }
   }
 
