@@ -32,10 +32,10 @@ mongoose
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
-  const currentUnixTime = new Date().getTime() / 1000;
+  const currentTime = new Date();
 
   const createdMedian = new GasMedian({
-    timestamp: currentUnixTime,
+    timestamp: currentTime,
     price: medianValue[1].toString(),
   });
 
@@ -257,19 +257,24 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 86400;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const index = await Index.find(
     {},
-    { _id: 0, timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } }
+    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime } }
   )
     .select("timestamp price")
     .exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
-    theResults.push(index[i]);
+    let obj = {};
+    
+    obj["timestamp"] = index[i]["timestamp"];
+    obj["price"] = index[i]["price"];
+
+    theResults.push(obj);
     // }
   }
 
@@ -285,11 +290,11 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 2629743;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const medians = await GasMedian.find({
-    timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime },
+    timestamp: { $gte: earlierTime, $lte: currentTime },
   })
     .select("timestamp price")
     .exec();
@@ -348,11 +353,11 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 2629743;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const twaps = await Twap.find(
-    { timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } },
+    { timestamp: { $gte: earlierTime, $lte: currentTime } },
     { _id: 0 }
   )
     .select("timestamp price")
