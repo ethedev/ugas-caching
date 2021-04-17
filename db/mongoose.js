@@ -47,7 +47,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
-    timestamp: indexValue[0].getTime() / 1000,
+    timestamp: indexValue[0],
     price: indexValue[1].toString(),
   });
 
@@ -271,7 +271,7 @@ const getDailyIndex = async (req, res, next) => {
     // if (i % 2 == 0) {
     let obj = {};
     
-    obj["timestamp"] = index[i]["timestamp"];
+    obj["timestamp"] = index[i]["timestamp"].getTime() / 1000;
     obj["price"] = index[i]["price"];
 
     theResults.push(obj);
