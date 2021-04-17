@@ -282,8 +282,8 @@ const getDailyIndex = async (req, res, next) => {
   let finalResults = [];
   let dayCount  = 0;
 
-  for (let i = 0; i < theResults.length && dayCount >= 30; i = i + delta) {
-    finalResults.push(theResults[i]);
+  for (let i = theResults.length; i <= 0 && dayCound >= 30; i = i + delta) {
+    finalResults.unshift(theResults[i]);
     dayCount += 1;
   }
 
