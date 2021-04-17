@@ -176,7 +176,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const currentTime = new Date();
+  const currentTime = new Date().toISOString();
 
   let priceResponse;
 
@@ -271,15 +271,22 @@ const getDailyIndex = async (req, res, next) => {
     // if (i % 2 == 0) {
     let obj = {};
     
-    obj["timestamp"] = index[i]["timestamp"].getTime() / 1000;
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
 
     theResults.push(obj);
     // }
   }
 
-  console.log("theResults", theResults);
-  res.json(theResults);
+  const delta = Math.floor(theResults.length / 288);
+  let finalResults = [];
+
+  for (let i = 0; i < theResults.length; i = i + delta) {
+    finalResults.push(theResults[i]);
+  }
+
+  console.log("theResults", finalResults);
+  res.json(finalResults);
 };
 
 const getLatestIndex = async (req, res, next) => {
