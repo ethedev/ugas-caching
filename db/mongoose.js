@@ -32,10 +32,10 @@ mongoose
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
-  const currentUnixTime = new Date().getTime() / 1000;
+  const currentTime = new Date();
 
   const createdMedian = new GasMedian({
-    timestamp: currentUnixTime,
+    timestamp: currentTime,
     price: medianValue[1].toString(),
   });
 
@@ -47,7 +47,7 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
-    timestamp: indexValue[0].getTime() / 1000,
+    timestamp: indexValue[0],
     price: indexValue[1].toString(),
   });
 
@@ -176,7 +176,7 @@ async function runQuery() {
 }
 
 async function fetchIndex() {
-  const currentTime = new Date();
+  const currentTime = new Date().toISOString();
 
   let priceResponse;
 
@@ -257,24 +257,38 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 86400;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const index = await Index.find(
     {},
-    { _id: 0, timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } }
+    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime } }
   )
     .select("timestamp price")
     .exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
-    theResults.push(index[i]);
+    let obj = {};
+    
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = index[i]["price"];
+
+    theResults.push(obj);
     // }
   }
 
-  console.log("theResults", theResults);
-  res.json(theResults);
+  const delta = Math.floor(theResults.length / 288);
+  let finalResults = [];
+  let dayCount  = 0;
+
+  for (let i = theResults.length; i <= 0 && dayCound <= 30; i = i + delta) {
+    finalResults.unshift(theResults[i]);
+    dayCount += 1;
+  }
+
+  console.log("theResults", finalResults);
+  res.json(finalResults);
 };
 
 const getLatestIndex = async (req, res, next) => {
@@ -285,11 +299,11 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 2629743;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const medians = await GasMedian.find({
-    timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime },
+    timestamp: { $gte: earlierTime, $lte: currentTime },
   })
     .select("timestamp price")
     .exec();
@@ -348,11 +362,11 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentUnixTime = new Date().getTime() / 1000;
-  let earlierUnixTime = currentUnixTime - 2629743;
+  let currentTime = new Date();
+  let earlierTime = currentTime.getDate() - 30;
 
   const twaps = await Twap.find(
-    { timestamp: { $gte: earlierUnixTime, $lte: currentUnixTime } },
+    { timestamp: { $gte: earlierTime, $lte: currentTime } },
     { _id: 0 }
   )
     .select("timestamp price")
