@@ -203,7 +203,13 @@ const getMedians = async (req, res, next) => {
   let theResults = [];
   for (let i = 0; i < medians.length; i++) {
     // if (i % 2 == 0) {
-    theResults.push(medians[i]);
+    let obj = {};
+    
+    obj["timestampDate"] = medians[i]["timestamp"];
+    obj["timestamp"] = (medians[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = medians[i]["price"];
+  
+    theResults.push(obj);
     // }
   }
   console.log("theResults", theResults);
@@ -248,7 +254,13 @@ const getIndex = async (req, res, next) => {
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
-    theResults.push(index[i]);
+    let obj = {};
+    
+    obj["timestampDate"] = index[i]["timestamp"];
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = index[i]["price"];
+  
+    theResults.push(obj);
     // }
   }
 
@@ -297,7 +309,14 @@ const getLatestIndex = async (req, res, next) => {
   const index = await Index.find({}, { _id: 0 })
     .select("timestamp price")
     .exec();
-  res.json(index[index.length - 1] || {});
+  
+  let obj = {};
+    
+  obj["timestampDate"] = index[index.length - 1]["timestamp"];
+  obj["timestamp"] = (index[index.length - 1]["timestamp"].getTime() / 1000).toFixed();
+  obj["price"] = index[index.length - 1]["price"];
+
+  res.json(obj || {});
 };
 
 const getMedianRange = async (req, res, next) => {
@@ -313,7 +332,13 @@ const getMedianRange = async (req, res, next) => {
   let theResults = [];
   for (let i = 0; i < medians.length; i++) {
     //   if (i % 2 == 0) {
-    theResults.push(medians[i]);
+    let obj = {};
+    
+    obj["timestampDate"] = medians[i]["timestamp"];
+    obj["timestamp"] = (medians[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = medians[i]["price"];
+  
+    theResults.push(obj);
     //   }
   }
   res.json(theResults);
@@ -324,7 +349,13 @@ const getLatestMedian = async (req, res, next) => {
     .select("timestamp price")
     .exec();
 
-  res.json(medians[medians.length - 1]);
+    let obj = {};
+
+    obj["timestampDate"] = medians[medians.length - 1]["timestamp"];
+    obj["timestamp"] = (medians[medians.length - 1]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = medians[medians.length - 1]["price"];
+
+  res.json(obj);
 };
 
 const getTwaps = async (req, res, next) => {
@@ -348,7 +379,18 @@ const getTwapsWithParam = async (req, res, next) => {
   let theResults = [];
   for (let i = 0; i < twaps.length; i++) {
     // if (i % 2 == 0) {
-    theResults.push(twaps[i]);
+
+    let obj = {};
+    
+    obj["asset"] = twaps[i]["asset"];
+    obj["address"] = twaps[i]["address"];
+    obj["timestampDate"] = twaps[i]["timestamp"];
+    obj["timestamp"] = (twaps[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = twaps[i]["price"];
+    obj["collateral"] = twaps[i]["collateral"];
+    obj["roundingDecimals"] = twaps[i]["roundingDecimals"];
+    
+    theResults.push(obj);
     // }
   }
 
@@ -360,7 +402,18 @@ const getLatestTwapWithParam = async (req, res, next) => {
   const twaps = await Twap.find({ address: { $eq: passedAddress } }, { _id: 0 })
     .select("timestamp asset address price collateral roundingDecimals")
     .exec();
-  res.json(twaps[twaps.length - 1] || {});
+
+  let obj = {};
+  
+  obj["asset"] = twaps[twaps.length - 1]["asset"];
+  obj["address"] = twaps[twaps.length - 1]["address"];
+  obj["timestampDate"] = twaps[twaps.length - 1]["timestamp"];
+  obj["timestamp"] = (twaps[twaps.length - 1]["timestamp"].getTime() / 1000).toFixed();
+  obj["price"] = twaps[twaps.length - 1]["price"];
+  obj["collateral"] = twaps[twaps.length - 1]["collateral"];
+  obj["roundingDecimals"] = twaps[twaps.length - 1]["roundingDecimals"];
+
+  res.json(obj || {});
 };
 
 const getTwapRange = async (req, res, next) => {
