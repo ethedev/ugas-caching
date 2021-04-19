@@ -32,7 +32,7 @@ mongoose
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
-  const currentTime = new Date();
+  const currentTime = new Date().toISOString();
 
   const createdMedian = new GasMedian({
     timestamp: currentTime,
@@ -133,13 +133,13 @@ function buildQuery(formattedCurrentTime, formattedEarlierTimeBound) {
 }
 
 async function formatCurrentTime() {
-  const currentTime = new Date();
+  const currentTime = new Date().toISOString();
   let formattedCurrentTime = moment(currentTime)
     .subtract(5, "minutes")
     .utc()
     .format(this.dateConversionString);
 
-  let earlierTimeBound = new Date();
+  let earlierTimeBound = new Date().toISOString();
   let formattedEarlierTimeBound = moment(earlierTimeBound)
     .subtract(2592300, "seconds")
     .utc()
@@ -269,7 +269,7 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentTime = new Date();
+  let currentTime = new Date().toISOString();
   let earlierTime = currentTime.getDate() - 30;
 
   const index = await Index.find(
@@ -320,7 +320,7 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentTime = new Date();
+  let currentTime = new Date().toISOString();
   let earlierTime = currentTime.getDate() - 30;
 
   const medians = await GasMedian.find({
@@ -417,7 +417,7 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentTime = new Date();
+  let currentTime = new Date().toISOString();
   let earlierTime = currentTime.getDate() - 30;
 
   const twaps = await Twap.find(
