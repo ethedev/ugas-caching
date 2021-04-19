@@ -271,6 +271,7 @@ const getDailyIndex = async (req, res, next) => {
     // if (i % 2 == 0) {
     let obj = {};
     
+    obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
 
@@ -278,13 +279,14 @@ const getDailyIndex = async (req, res, next) => {
     // }
   }
 
-  const delta = Math.floor(theResults.length / 288);
   let finalResults = [];
   let dayCount  = 0;
 
-  for (let i = theResults.length; i >= 0 && dayCount <= 30; i = i - delta) {
-    finalResults.unshift(theResults[i]);
-    dayCount += 1;
+  for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
+      finalResults.unshift(theResults[i]);
+      dayCount += 1;
+    }
   }
 
   console.log("theResults", finalResults);
