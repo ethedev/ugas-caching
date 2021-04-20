@@ -269,12 +269,12 @@ const getIndex = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentTime = new Date().toISOString();
-  let earlierTime = currentTime.getDate() - 30;
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
   const index = await Index.find(
     {},
-    { _id: 0, timestamp: { $gte: earlierTime, $lte: currentTime } }
+    { _id: 0, timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } }
   )
     .select("timestamp price")
     .exec();
@@ -320,11 +320,11 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getMedianRange = async (req, res, next) => {
-  let currentTime = new Date().toISOString();
-  let earlierTime = currentTime.getDate() - 30;
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
   const medians = await GasMedian.find({
-    timestamp: { $gte: earlierTime, $lte: currentTime },
+    timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() },
   })
     .select("timestamp price")
     .exec();
@@ -417,11 +417,11 @@ const getLatestTwapWithParam = async (req, res, next) => {
 };
 
 const getTwapRange = async (req, res, next) => {
-  let currentTime = new Date().toISOString();
-  let earlierTime = currentTime.getDate() - 30;
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
   const twaps = await Twap.find(
-    { timestamp: { $gte: earlierTime, $lte: currentTime } },
+    { timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } },
     { _id: 0 }
   )
     .select("timestamp price")
@@ -472,7 +472,7 @@ const twapCreation = async (req, res, next) => {
       console.log(err);
     }
     let price = new BigNumber(priceFeed.getCurrentPrice());
-    let time = priceFeed.lastUpdateTime;
+    let time = new Date(priceFeed.lastUpdateTime * 1000).toISOString()
 
     if (
       assetPairArray[assetPairAddress].value ==
