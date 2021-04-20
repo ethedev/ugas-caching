@@ -34,8 +34,6 @@ const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
   const currentTime = new Date().toISOString();
 
-  console.log(typeof(medianValue[1]), medianValue[1]);
-
   const createdMedian = new GasMedian({
     timestamp: currentTime,
     price: medianValue[1].toString(),
