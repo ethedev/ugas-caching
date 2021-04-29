@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 // gas
 app.get('/median', mongoFunctions.getLatestMedian);
 app.get('/median-history', mongoFunctions.getMedians);
-app.get('/median-range', mongoFunctions.getMedianRange)
+app.get('/median-range', mongoFunctions.getMedianRange);
 
 // twap
 // app.get('/twap', mongoFunctions.getLatestTwap);
