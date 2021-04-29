@@ -29,6 +29,9 @@ cron.schedule('0 * * * *', function() {
 // index scheduler with cycle
 cron.schedule('*/5 * * * *', function() {
     console.log("running index cron")
+
+    // @dev To add another uSTONKS cycle, add the cycle keyword to the array.
+    // @notice The index of each entry mirrors the index of the spreadsheet.
     const cycleArray = ['APR21', 'JUN21'];
 
     mongoFunctions.getIndexFromSpreadsheetWithCycle(cycleArray);
