@@ -19,10 +19,22 @@ cron.schedule('0 * * * *', function() {
     mongoFunctions.twapCreation();
 });
 
+// @todo Remove scheduler.
 // index scheduler
+// cron.schedule('*/5 * * * *', function() {
+//     console.log("running index cron")
+//     mongoFunctions.getIndexFromSpreadsheet();
+// });
+
+// index scheduler with cycle
 cron.schedule('*/5 * * * *', function() {
     console.log("running index cron")
-    mongoFunctions.getIndexFromSpreadsheet();
+
+    // @dev To add another uSTONKS cycle, add the cycle keyword to the array.
+    // @notice The index of each entry mirrors the index of the spreadsheet.
+    const cycleArray = ['APR21', 'JUN21'];
+
+    mongoFunctions.getIndexFromSpreadsheetWithCycle(cycleArray);
 });
 
 // twap cleaner
@@ -56,8 +68,14 @@ app.get('/twap/pair/:address', mongoFunctions.getLatestTwapWithParam);
 app.get('/twap-history/pair/:address', mongoFunctions.getTwapsWithParam);
 
 // other
+// @todo Remove endpoint.
 app.get('/ustonks/index', mongoFunctions.getLatestIndex);
+app.get('/ustonks/index/:cycle', mongoFunctions.getLatestIndexWithParam);
+// @todo Remove endpoint.
 app.get('/ustonks/index-history', mongoFunctions.getIndex);
+app.get('/ustonks/index-history/:cycle', mongoFunctions.getIndexWithParam);
+// @todo Remove endpoint.
 app.get('/ustonks/index-history-daily', mongoFunctions.getDailyIndex);
+app.get('/ustonks/index-history-daily/:cycle', mongoFunctions.getDailyIndexWithParam);
 
 app.listen(8080);
