@@ -55,6 +55,24 @@ const getIndexFromSpreadsheet = async (req, res, next) => {
   // res.json(result);
 };
 
+const getIndexFromSpreadsheetWithCycle = async (cycleArray) => {
+  for (let i = 0; i < cycleArray.length; i++) {
+    const indexValue = await fetchIndex(i, cycleArray[i]);
+
+    // console.log(indexValue)
+
+    const fetchedIndex = new Index({
+      cycle: indexValue[0],
+      timestamp: indexValue[1],
+      price: indexValue[2].toString(),
+    });
+
+    await fetchedIndex.save();
+    // res.json(result);
+
+  }
+};
+
 async function submitQuery(query) {
   // returns a node read stream
   const stream = await client.createQueryStream({ query });
@@ -175,7 +193,7 @@ async function runQuery() {
   return [formattedCurrentTime, priceResponse];
 }
 
-async function fetchIndex() {
+async function fetchIndex(_index, _cycle) {
   const currentTime = new Date().toISOString();
 
   let priceResponse;
@@ -185,7 +203,7 @@ async function fetchIndex() {
     await doc.useApiKey(process.env.GAPI_KEY);
     await doc.loadInfo();
 
-    const sheet = await doc.sheetsByIndex[0];
+    const sheet = await doc.sheetsByIndex[_index];
     await sheet.loadCells("M50");
     const targetCell = await sheet.getCellByA1("M50");
     priceResponse = targetCell.value;
@@ -193,7 +211,7 @@ async function fetchIndex() {
     console.error(error);
   }
 
-  return [currentTime, priceResponse];
+  return [_cycle, currentTime, priceResponse];
 }
 
 const getMedians = async (req, res, next) => {
@@ -248,7 +266,7 @@ const twapCleaner = async () => {
 };
 
 const getIndex = async (req, res, next) => {
-  const index = await Index.find({}, { _id: 0 })
+  const index = await Index.find()
     .select("timestamp price")
     .exec();
   let theResults = [];
@@ -268,14 +286,34 @@ const getIndex = async (req, res, next) => {
   res.json(theResults);
 };
 
+const getIndexWithParam = async (req, res, next) => {
+  const passedCycle = req.params.cycle;
+  const index = await Index.find({ cycle: { $eq: passedCycle } })
+    .select("cycle timestamp price")
+    .exec();
+  let theResults = [];
+  for (let i = 0; i < index.length; i++) {
+    // if (i % 2 == 0) {
+    let obj = {};
+    
+    obj["cycle"] = index[i]["cycle"];
+    obj["timestampDate"] = index[i]["timestamp"];
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = index[i]["price"];
+  
+    theResults.push(obj);
+    // }
+  }
+
+  console.log("theResults", theResults);
+  res.json(theResults);
+};
+
 const getDailyIndex = async (req, res, next) => {
   let currentTime = new Date();
   let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
-  const index = await Index.find(
-    {},
-    { _id: 0, timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } }
-  )
+  const index = await Index.find({ timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
     .select("timestamp price")
     .exec();
   let theResults = [];
@@ -305,8 +343,44 @@ const getDailyIndex = async (req, res, next) => {
   res.json(finalResults);
 };
 
+const getDailyIndexWithParam = async (req, res, next) => {
+  const passedCycle = req.params.cycle;
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
+
+  const index = await Index.find({ cycle: { $eq: passedCycle }, timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
+    .select("cycle timestamp price")
+    .exec();
+  let theResults = [];
+  for (let i = 0; i < index.length; i++) {
+    // if (i % 2 == 0) {
+    let obj = {};
+    
+    obj["cycle"] = index[i]["cycle"];
+    obj["timestampDate"] = index[i]["timestamp"];
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = index[i]["price"];
+
+    theResults.push(obj);
+    // }
+  }
+
+  let finalResults = [];
+  let dayCount  = 0;
+
+  for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
+      finalResults.unshift(theResults[i]);
+      dayCount += 1;
+    }
+  }
+
+  console.log("theResults", finalResults);
+  res.json(finalResults);
+};
+
 const getLatestIndex = async (req, res, next) => {
-  const index = await Index.find({}, { _id: 0 })
+  const index = await Index.find()
     .select("timestamp price")
     .exec();
   
@@ -318,6 +392,25 @@ const getLatestIndex = async (req, res, next) => {
 
   res.json(obj || {});
 };
+
+const getLatestIndexWithParam = async (req, res, next) => {
+  const passedCycle = req.params.cycle;
+
+  const index = await Index.find({ cycle: { $eq: passedCycle } })
+  .select("cycle timestamp price")
+  .exec();
+
+  let obj = {};
+    
+  obj["cycle"] = index[index.length - 1]["cycle"];
+  obj["timestampDate"] = index[index.length - 1]["timestamp"];
+  obj["timestamp"] = (index[index.length - 1]["timestamp"].getTime() / 1000).toFixed();
+  obj["price"] = index[index.length - 1]["price"];
+
+  console.log(obj)
+
+  res.json(obj || {});
+}
 
 const getMedianRange = async (req, res, next) => {
   let currentTime = new Date();
@@ -500,10 +593,14 @@ const twapCreation = async (req, res, next) => {
 
 exports.createMedian = createMedian;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
+exports.getIndexFromSpreadsheetWithCycle = getIndexFromSpreadsheetWithCycle;
 exports.getMedians = getMedians;
 exports.getIndex = getIndex;
+exports.getIndexWithParam = getIndexWithParam;
 exports.getDailyIndex = getDailyIndex;
+exports.getDailyIndexWithParam = getDailyIndexWithParam;
 exports.getLatestIndex = getLatestIndex;
+exports.getLatestIndexWithParam = getLatestIndexWithParam;
 exports.getTwaps = getTwaps;
 exports.twapCleaner = twapCleaner;
 exports.getTwapsWithParam = getTwapsWithParam;
