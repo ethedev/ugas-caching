@@ -17,7 +17,7 @@ const client = new BigQuery();
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const assetURI =
-  "https://raw.githubusercontent.com/yam-finance/degenerative/develop/protocol/assets.json";
+  "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
 const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 const web3 = new Web3(INFURA_URL);
 
@@ -576,6 +576,10 @@ const twapCreation = async (req, res, next) => {
     } else {
       price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
       roundingDecimals = 4;
+
+      if (assetPairArray[assetPairAddress].key.includes("USTONKS")) {
+        roundingDecimals = 2;
+      }
     }
 
     const createdTwap = new Twap({
