@@ -287,7 +287,8 @@ const getIndex = async (req, res, next) => {
 };
 
 const getIndexWithParam = async (req, res, next) => {
-  const passedCycle = req.params.cycle;
+  const passedCycle = req.params.cycle.toLowerCase();
+
   const index = await Index.find({ cycle: { $eq: passedCycle } })
     .select("cycle timestamp price")
     .exec();
@@ -344,7 +345,7 @@ const getDailyIndex = async (req, res, next) => {
 };
 
 const getDailyIndexWithParam = async (req, res, next) => {
-  const passedCycle = req.params.cycle;
+  const passedCycle = req.params.cycle.toLowerCase();
   let currentTime = new Date();
   let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
@@ -394,7 +395,7 @@ const getLatestIndex = async (req, res, next) => {
 };
 
 const getLatestIndexWithParam = async (req, res, next) => {
-  const passedCycle = req.params.cycle;
+  const passedCycle = req.params.cycle.toLowerCase();
 
   const index = await Index.find({ cycle: { $eq: passedCycle } })
   .select("cycle timestamp price")
