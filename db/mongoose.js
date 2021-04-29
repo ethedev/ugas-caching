@@ -407,8 +407,6 @@ const getLatestIndexWithParam = async (req, res, next) => {
   obj["timestamp"] = (index[index.length - 1]["timestamp"].getTime() / 1000).toFixed();
   obj["price"] = index[index.length - 1]["price"];
 
-  console.log(obj)
-
   res.json(obj || {});
 }
 
