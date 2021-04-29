@@ -484,6 +484,10 @@ const twapCreation = async (req, res, next) => {
     } else {
       price = price.multipliedBy(new BigNumber(10).pow(-18)).toFixed();
       roundingDecimals = 4;
+
+      if (assetPairArray[assetPairAddress].key.includes("USTONKS")) {
+        roundingDecimals = 2;
+      }
     }
 
     const createdTwap = new Twap({
