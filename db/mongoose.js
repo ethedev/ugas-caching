@@ -44,20 +44,20 @@ const createMedian = async (req, res, next) => {
 };
 
 const getIndexFromSpreadsheet = async (req, res, next) => {
-  const indexValue = fetchIndex();
+  const indexValue = await fetchIndex();
 
   const fetchedIndex = new Index({
     timestamp: indexValue[0],
     price: indexValue[1].toString(),
   });
 
-  fetchedIndex.save();
+  await fetchedIndex.save();
   // res.json(result);
 };
 
 const getIndexFromSpreadsheetWithCycle = async (cycleArray) => {
   for (let i = 0; i < cycleArray.length; i++) {
-    const indexValue = fetchIndex(i, cycleArray[i]);
+    const indexValue = await fetchIndex(i, cycleArray[i]);
 
     // console.log(indexValue)
 
@@ -67,7 +67,7 @@ const getIndexFromSpreadsheetWithCycle = async (cycleArray) => {
       price: indexValue[2].toString(),
     });
 
-    fetchedIndex.save();
+    await fetchedIndex.save();
     // res.json(result);
 
   }
