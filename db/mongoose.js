@@ -44,20 +44,20 @@ const createMedian = async (req, res, next) => {
 };
 
 const getIndexFromSpreadsheet = async (req, res, next) => {
-  const indexValue = await fetchIndex();
+  const indexValue = fetchIndex();
 
   const fetchedIndex = new Index({
     timestamp: indexValue[0],
     price: indexValue[1].toString(),
   });
 
-  await fetchedIndex.save();
+  fetchedIndex.save();
   // res.json(result);
 };
 
 const getIndexFromSpreadsheetWithCycle = async (cycleArray) => {
   for (let i = 0; i < cycleArray.length; i++) {
-    const indexValue = await fetchIndex(i, cycleArray[i]);
+    const indexValue = fetchIndex(i, cycleArray[i]);
 
     // console.log(indexValue)
 
@@ -67,7 +67,7 @@ const getIndexFromSpreadsheetWithCycle = async (cycleArray) => {
       price: indexValue[2].toString(),
     });
 
-    await fetchedIndex.save();
+    fetchedIndex.save();
     // res.json(result);
 
   }
@@ -311,45 +311,7 @@ const getIndexWithParam = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  let currentTime = new Date();
-  let earlierTime = new Date(currentTime.getTime() - 2629743000);
-
-  const index = await Index.find({ timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
-    .select("timestamp price")
-    .exec();
-  let theResults = [];
-  for (let i = 0; i < index.length; i++) {
-    // if (i % 2 == 0) {
-    let obj = {};
-    
-    obj["timestampDate"] = index[i]["timestamp"];
-    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
-    obj["price"] = index[i]["price"];
-
-    theResults.push(obj);
-    // }
-  }
-
-  let finalResults = [];
-  let dayCount  = 0;
-
-  for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
-    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
-      finalResults.unshift(theResults[i]);
-      dayCount += 1;
-    }
-  }
-
-  console.log("theResults", finalResults);
-  res.json(finalResults);
-};
-
-const getDailyIndexWithParam = async (req, res, next) => {
-  const passedCycle = req.params.cycle.toLowerCase();
-  let currentTime = new Date();
-  let earlierTime = new Date(currentTime.getTime() - 2629743000);
-
-  const index = await Index.find({ cycle: { $eq: passedCycle }, timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
+  const index = await Index.find()
     .select("cycle timestamp price")
     .exec();
   let theResults = [];
@@ -370,7 +332,41 @@ const getDailyIndexWithParam = async (req, res, next) => {
   let dayCount  = 0;
 
   for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
-    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00")) {
+      finalResults.unshift(theResults[i]);
+      dayCount += 1;
+    }
+  }
+
+  console.log("theResults", finalResults);
+  res.json(finalResults);
+};
+
+const getDailyIndexWithParam = async (req, res, next) => {
+  const passedCycle = req.params.cycle.toLowerCase();
+
+  const index = await Index.find({ cycle: { $eq: passedCycle }})
+    .select("cycle timestamp price")
+    .exec();
+  let theResults = [];
+  for (let i = 0; i < index.length; i++) {
+    // if (i % 2 == 0) {
+    let obj = {};
+    
+    obj["cycle"] = index[i]["cycle"];
+    obj["timestampDate"] = index[i]["timestamp"];
+    obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
+    obj["price"] = index[i]["price"];
+
+    theResults.push(obj);
+    // }
+  }
+
+  let finalResults = [];
+  let dayCount  = 0;
+
+  for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00")) {
       finalResults.unshift(theResults[i]);
       dayCount += 1;
     }
