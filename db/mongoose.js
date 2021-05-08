@@ -311,7 +311,11 @@ const getIndexWithParam = async (req, res, next) => {
 };
 
 const getDailyIndex = async (req, res, next) => {
-  const index = await Index.find()
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
+
+  const index = await Index.find({ timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
+    .select("timestamp price")
     .select("cycle timestamp price")
     .exec();
   let theResults = [];
@@ -344,8 +348,10 @@ const getDailyIndex = async (req, res, next) => {
 
 const getDailyIndexWithParam = async (req, res, next) => {
   const passedCycle = req.params.cycle.toLowerCase();
+  let currentTime = new Date();
+  let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
-  const index = await Index.find({ cycle: { $eq: passedCycle }})
+  const index = await Index.find({ cycle: { $eq: passedCycle }, timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
     .select("cycle timestamp price")
     .exec();
   let theResults = [];
