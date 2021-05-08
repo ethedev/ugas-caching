@@ -315,7 +315,6 @@ const getDailyIndex = async (req, res, next) => {
   let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
   const index = await Index.find({ timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
-    .select("timestamp price")
     .select("cycle timestamp price")
     .exec();
   let theResults = [];
