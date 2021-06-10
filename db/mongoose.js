@@ -337,13 +337,14 @@ const getDailyIndex = async (req, res, next) => {
   let earlierTime = new Date(currentTime.getTime() - 2629743000);
 
   const index = await Index.find({ timestamp: { $gte: earlierTime.toISOString(), $lte: currentTime.toISOString() } })
-    .select("timestamp price")
+    .select("cycle timestamp price")
     .exec();
   let theResults = [];
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-
+    
+    obj["cycle"] = index[i]["cycle"];
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
@@ -356,7 +357,7 @@ const getDailyIndex = async (req, res, next) => {
   let dayCount  = 0;
 
   for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
-    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00")) {
       finalResults.unshift(theResults[i]);
       dayCount += 1;
     }
@@ -392,7 +393,7 @@ const getDailyIndexWithParam = async (req, res, next) => {
   let dayCount  = 0;
 
   for (let i = theResults.length - 1; i >= 0 && dayCount < 30; i--) {
-    if (theResults[i]["timestampDate"].toISOString().includes("T01:00:00")) {
+    if (theResults[i]["timestampDate"].toISOString().includes("T01:00")) {
       finalResults.unshift(theResults[i]);
       dayCount += 1;
     }
