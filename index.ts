@@ -8,16 +8,24 @@ const mongoFunctions = require('./db/mongoose');
 const app = express();
 
 // gas scheduler
-cron.schedule('0 0 * * *', function() {
-    console.log("running gas cron")
-    mongoFunctions.createMedian();
-});
+// cron.schedule('0 0 * * *', function() {
+//     console.log("running gas cron")
+//     mongoFunctions.createMedian();
+// });
+
+// apr scheduler
+// cron.schedule('0 * * * *', function() {
+//     console.log("running apr cron")
+//     mongoFunctions.saveAPR();
+// });
+mongoFunctions.saveAPR();
+
 
 // twap scheduler
-cron.schedule('0 * * * *', function() {
-    console.log("running twap cron")
-    mongoFunctions.twapCreation();
-});
+// cron.schedule('0 * * * *', function() {
+//     console.log("running twap cron")
+//     mongoFunctions.twapCreation();
+// });
 
 // @todo Remove scheduler.
 // index scheduler

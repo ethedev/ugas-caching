@@ -6,6 +6,7 @@ const highland = require("highland");
 const moment = require("moment");
 const fetch = require("node-fetch");
 const BigNumber = require("bignumber.js");
+const { getMiningRewards } = require("./apr");
 
 const GasMedian = require("../models/median");
 const Twap = require("../models/twap");
@@ -29,6 +30,27 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
+
+const saveAPR = async(req, res, next) => {
+  const name = "UGAS-JUN21";
+  const synth = {
+      name: 'June',
+      cycle: 'JUN',
+      year: '21',
+      collateral: 'WETH',
+      token: {
+        address: '0xa6b9d7e3d76cf23549293fb22c488e0ea591a44e',
+        decimals: 18
+      },
+      emp: { address: '0x4e8d60a785c2636a63c5bd47c7050d21266c8b43', new: true },
+      pool: { address: '0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873' },
+      expired: null
+    };
+  const priceUsd = 170.242;
+  const cr = 1.5;
+  const tokenCount = 1437.256103561099;
+  getMiningRewards(name, synth, priceUsd, cr, tokenCount)
+}
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
@@ -99,7 +121,7 @@ function buildQuery(formattedCurrentTime, formattedEarlierTimeBound) {
         DECLARE max_block int64;
 
         -- Querying for the amount of blocks in the preset time range. This will allow block_count to be compared against a given minimum block amount.
-        SET (block_count, max_block) = (SELECT AS STRUCT (MAX(number) - MIN(number)), MAX(number) FROM \`bigquery-public-data.crypto_ethereum.blocks\` 
+        SET (block_count, max_block) = (SELECT AS STRUCT (MAX(number) - MIN(number)), MAX(number) FROM \`bigquery-public-data.crypto_ethereum.blocks\`
         WHERE timestamp BETWEEN TIMESTAMP('${formattedEarlierTimeBound}', 'UTC') AND TIMESTAMP('${formattedCurrentTime}', 'UTC'));
 
         CREATE TEMP TABLE cum_gas (
@@ -119,9 +141,9 @@ function buildQuery(formattedCurrentTime, formattedEarlierTimeBound) {
               SUM(receipt_gas_used) AS gas_used
             FROM
               \`bigquery-public-data.crypto_ethereum.transactions\`
-            WHERE block_timestamp 
+            WHERE block_timestamp
             BETWEEN TIMESTAMP('${formattedEarlierTimeBound}', 'UTC')
-            AND TIMESTAMP('${formattedCurrentTime}', 'UTC')  
+            AND TIMESTAMP('${formattedCurrentTime}', 'UTC')
             GROUP BY
               gas_price));
         ELSE -- If a minimum threshold of blocks is not met, query for the minimum amount of blocks
@@ -135,7 +157,7 @@ function buildQuery(formattedCurrentTime, formattedEarlierTimeBound) {
               SUM(receipt_gas_used) AS gas_used
             FROM
               \`bigquery-public-data.crypto_ethereum.transactions\`
-            WHERE block_number 
+            WHERE block_number
             BETWEEN (max_block - 134400)
             AND max_block
             GROUP BY
@@ -222,11 +244,11 @@ const getMedians = async (req, res, next) => {
   for (let i = 0; i < medians.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["timestampDate"] = medians[i]["timestamp"];
     obj["timestamp"] = (medians[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = medians[i]["price"];
-  
+
     theResults.push(obj);
     // }
   }
@@ -273,11 +295,11 @@ const getIndex = async (req, res, next) => {
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
-  
+
     theResults.push(obj);
     // }
   }
@@ -296,12 +318,12 @@ const getIndexWithParam = async (req, res, next) => {
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["cycle"] = index[i]["cycle"];
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
-  
+
     theResults.push(obj);
     // }
   }
@@ -321,7 +343,7 @@ const getDailyIndex = async (req, res, next) => {
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = index[i]["price"];
@@ -356,7 +378,7 @@ const getDailyIndexWithParam = async (req, res, next) => {
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["cycle"] = index[i]["cycle"];
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
@@ -384,9 +406,9 @@ const getLatestIndex = async (req, res, next) => {
   const index = await Index.find()
     .select("timestamp price")
     .exec();
-  
+
   let obj = {};
-    
+
   obj["timestampDate"] = index[index.length - 1]["timestamp"];
   obj["timestamp"] = (index[index.length - 1]["timestamp"].getTime() / 1000).toFixed();
   obj["price"] = index[index.length - 1]["price"];
@@ -402,7 +424,7 @@ const getLatestIndexWithParam = async (req, res, next) => {
   .exec();
 
   let obj = {};
-    
+
   obj["cycle"] = index[index.length - 1]["cycle"];
   obj["timestampDate"] = index[index.length - 1]["timestamp"];
   obj["timestamp"] = (index[index.length - 1]["timestamp"].getTime() / 1000).toFixed();
@@ -425,11 +447,11 @@ const getMedianRange = async (req, res, next) => {
   for (let i = 0; i < medians.length; i++) {
     //   if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["timestampDate"] = medians[i]["timestamp"];
     obj["timestamp"] = (medians[i]["timestamp"].getTime() / 1000).toFixed();
     obj["price"] = medians[i]["price"];
-  
+
     theResults.push(obj);
     //   }
   }
@@ -473,7 +495,7 @@ const getTwapsWithParam = async (req, res, next) => {
     // if (i % 2 == 0) {
 
     let obj = {};
-    
+
     obj["asset"] = twaps[i]["asset"];
     obj["address"] = twaps[i]["address"];
     obj["timestampDate"] = twaps[i]["timestamp"];
@@ -481,7 +503,7 @@ const getTwapsWithParam = async (req, res, next) => {
     obj["price"] = twaps[i]["price"];
     obj["collateral"] = twaps[i]["collateral"];
     obj["roundingDecimals"] = twaps[i]["roundingDecimals"];
-    
+
     theResults.push(obj);
     // }
   }
@@ -496,7 +518,7 @@ const getLatestTwapWithParam = async (req, res, next) => {
     .exec();
 
   let obj = {};
-  
+
   obj["asset"] = twaps[twaps.length - 1]["asset"];
   obj["address"] = twaps[twaps.length - 1]["address"];
   obj["timestampDate"] = twaps[twaps.length - 1]["timestamp"];
@@ -595,6 +617,7 @@ const twapCreation = async (req, res, next) => {
 };
 
 exports.createMedian = createMedian;
+exports.saveAPR = saveAPR;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
 exports.getIndexFromSpreadsheetWithCycle = getIndexFromSpreadsheetWithCycle;
 exports.getMedians = getMedians;
