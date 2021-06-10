@@ -19,33 +19,33 @@ const EthNodeProvider = new providers.JsonRpcProvider(
  * @notice This will be removed after the api is ready (don't remove any comments)
  * @param {string} assetName Name of an asset for the input
  * @param {ISynth} asset Asset object for the input
- * @param {number} assetPrice Asset price for the input
- * @param {number} cr Collateral Ratio for the input
- * @param {number} tokenCount Total supply for the input
  * @public
  * @methods
  */
 export const getMiningRewards = async (
   assetName: string,
   asset: ISynth,
-  assetPrice: number,
-  cr: number,
-  tokenCount: number,
 ) => {
   // TODO Use params for setup instead of test setup
   const ethersProvider: ethers.providers.JsonRpcProvider =  EthNodeProvider;
   const network = 'mainnet';
 
   /// @dev Check if params are set
-  if (!assetName || !asset || !assetPrice || !cr || !tokenCount) {
+  if (!assetName || !asset) {
     return 0;
   }
 
-  const cached = sessionStorage.getItem(assetName);
-  if (cached) return cached;
-
   try {
     const contractLp = new ethers.Contract(asset.pool.address, UNIContract.abi, ethersProvider);
+
+    /// @dev Construct devMiningCalculator
+    const devmining =  devMiningCalculator({
+      provider: ethersProvider,
+      ethers: ethers,
+      getPrice: getPriceByContract,
+      empAbi: EMPContract.abi,
+      erc20Abi: erc20.abi,
+    });
 
     const [
         jsonEmpData,
@@ -54,7 +54,7 @@ export const getMiningRewards = async (
         umaPrice,
         yamPrice
     ] = await Promise.all([
-        getEmpData(ethersProvider, network),
+        getEmpData(devmining, ethersProvider, network),
         contractLp.getReserves(),
         getUsdPrice("weth"),
         getUsdPrice("uma"),
@@ -64,23 +64,28 @@ export const getMiningRewards = async (
     const jsonEmpObject = JSON.parse(jsonEmpData)
     const { rewards, whitelistedTVM } = jsonEmpObject
 
+    /// @dev Get emp info from devMiningCalculator
+    const getEmpInfo: any = await devmining.utils.getEmpInfo(
+      asset.emp.address
+    );
+
     /// @dev Setup base variables for calculation
     let baseCollateral;
     const baseAsset = BigNumber.from(10).pow(asset.token.decimals);
 
     /// @dev Temporary pricing
-    let tokenPrice;
+    // let tokenPrice;
     if (asset.collateral === "USDC") {
       baseCollateral = BigNumber.from(10).pow(6);
       /* @ts-ignore */
-      tokenPrice = assetPrice * 1;
+      // tokenPrice = assetPrice * 1;
       // } else if(assetInstance.collateral === "YAM"){
       //   tokenPrice = assetPrice * yamPrice;
     } else {
       baseCollateral = BigNumber.from(10).pow(18);
       /* @ts-ignore */
       // tokenPrice = assetPrice * ethPrice;
-      tokenPrice = assetPrice * 1;
+      // tokenPrice = assetPrice * 1;
     }
 
     /// @dev Prepare reward calculation
@@ -107,16 +112,16 @@ export const getMiningRewards = async (
     const assetReserve0 = BigNumber.from(contractLpCall._reserve0).div(baseAsset).toNumber();
     const assetReserve1 = BigNumber.from(contractLpCall._reserve1).div(baseCollateral).toNumber();
 
-    calcAsset = assetReserve0 * tokenPrice;
+    calcAsset = assetReserve0 * getEmpInfo.tokenPrice;
     calcCollateral = assetReserve1 * (asset.collateral == "WETH" ? ethPrice : 1);
 
     /// @dev Prepare calculation
     console.log("assetName", assetName)
     // getEmpInfo.tokenCount
-    const _tokenCount: number = tokenCount
+    const _tokenCount: number = Number(utils.formatUnits(getEmpInfo.tokenCount, 18))
     console.log("_tokenCount", _tokenCount.toString())
     // getEmpInfo.tokenPrice
-    const _tokenPrice: number = tokenPrice
+    const _tokenPrice: number = getEmpInfo.tokenPrice
     console.log("_tokenPrice", _tokenPrice)
     // whitelistedTVM
     const _whitelistedTVM: number = Number(whitelistedTVM)
@@ -144,8 +149,8 @@ export const getMiningRewards = async (
     const _numberOfWeeksInYear: number = 52
     console.log("_numberOfWeeksInYear", _numberOfWeeksInYear)
     // cr
-    const _cr: number = cr
-    console.log("_cr", _cr)
+    // const _cr: number = cr
+    // console.log("_cr", _cr)
 
 
     // @notice New calculation based on the doc
@@ -175,21 +180,17 @@ export const getMiningRewards = async (
     console.log("sponsorAmountPerDollarMintedPerWeek", sponsorAmountPerDollarMintedPerWeek.toString())
 
     // collateralEfficiency = 1 / (CR + 1)
-    const collateralEfficiency: number = 1 / (_cr + 1)
-    console.log("collateralEfficiency", collateralEfficiency)
+    // const collateralEfficiency: number = 1 / (_cr + 1)
+    // console.log("collateralEfficiency", collateralEfficiency)
 
     // General APR = (sponsorAmountPerDollarMintedPerWeek * chosen collateralEfficiency * 52)
-    let generalAPR: number = sponsorAmountPerDollarMintedPerWeek * collateralEfficiency * _numberOfWeeksInYear * 100;
+    let generalAPR: number = sponsorAmountPerDollarMintedPerWeek * _numberOfWeeksInYear * 100;
     console.log("generalAPR", generalAPR.toString())
     console.log("------------------------------------")
-
-    /// @TODO Only return generalAPR without collateralEfficiency
 
     if (generalAPR === Infinity) {
       generalAPR = 0;
     }
-
-    sessionStorage.setItem(assetName, generalAPR.toString());
 
     return generalAPR.toString();
   } catch (e) {
@@ -229,26 +230,12 @@ export const getUsdPrice = async (cgId: string) => {
   }
 };
 
-const getEmpData = async (ethersProvider: ethers.providers.JsonRpcProvider, network: string) => {
+const getEmpData = async (devmining, ethersProvider: ethers.providers.JsonRpcProvider, network: string) => {
   const cached = sessionStorage.getItem("empData");
   if (cached) return cached;
 
   /// @dev Get dev mining emp
   const devMiningEmp = await getDevMiningEmps(network);
-
-  /// @dev Construct devMiningCalculator
-  const devmining =  devMiningCalculator({
-    provider: ethersProvider,
-    ethers: ethers,
-    getPrice: getPriceByContract,
-    empAbi: EMPContract.abi,
-    erc20Abi: erc20.abi,
-  });
-
-  /// @dev Get emp info from devMiningCalculator
-  // const getEmpInfo: any = await devmining.utils.getEmpInfo(
-  //   asset.emp.address
-  // );
 
   /// @dev Get dev mining reward estimation from devMiningCalculator
   const estimateDevMiningRewards = await devmining.estimateDevMiningRewards(

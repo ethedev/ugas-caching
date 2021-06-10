@@ -9,6 +9,7 @@ const BigNumber = require("bignumber.js");
 const { getMiningRewards } = require("./apr");
 
 const GasMedian = require("../models/median");
+const Apr = require("../models/apr");
 const Twap = require("../models/twap");
 const Index = require("../models/indexValue");
 const TestingUniPriceFunctions = require("../price-feed/CreateNewUni");
@@ -31,8 +32,10 @@ mongoose
     console.log(err);
   });
 
-const saveAPR = async(req, res, next) => {
-  const name = "UGAS-JUN21";
+const saveAPR = async () => {
+  const currentTime = new Date().toISOString();
+
+  const assetName = "UGAS-JUN21";
   const synth = {
       name: 'June',
       cycle: 'JUN',
@@ -46,10 +49,20 @@ const saveAPR = async(req, res, next) => {
       pool: { address: '0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873' },
       expired: null
     };
-  const priceUsd = 170.242;
-  const cr = 1.5;
-  const tokenCount = 1437.256103561099;
-  getMiningRewards(name, synth, priceUsd, cr, tokenCount)
+
+  const apr = await getMiningRewards(assetName, synth)
+
+  const clientCalc = (1 / (1.5 + 1)) * apr;
+  console.log("clientCalc", clientCalc)
+
+  /// @TODO Uncomment before merge
+  // const getApr = new Apr({
+  //   assetName: assetName,
+  //   apr: apr,
+  //   timestamp: currentTime,
+  // });
+  //
+  // await getApr.save();
 }
 
 const createMedian = async (req, res, next) => {
@@ -343,7 +356,7 @@ const getDailyIndex = async (req, res, next) => {
   for (let i = 0; i < index.length; i++) {
     // if (i % 2 == 0) {
     let obj = {};
-    
+
     obj["cycle"] = index[i]["cycle"];
     obj["timestampDate"] = index[i]["timestamp"];
     obj["timestamp"] = (index[i]["timestamp"].getTime() / 1000).toFixed();
