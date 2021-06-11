@@ -60,15 +60,15 @@ const saveAPR = async () => {
             pricePerPaired = pool.token1Price;
           }
 
-          const apr = await getMiningRewards(assetName, asset, priceUsd)
+          const aprMultiplier = await getMiningRewards(assetName, asset, priceUsd)
 
-          const clientCalc = (1 / (1.5 + 1)) * apr;
+          const clientCalc = (1 / (1.5 + 1)) * aprMultiplier;
           console.log("clientCalc", clientCalc)
 
           /// @TODO Uncomment before merge
           const getApr = new Apr({
             assetName: assetName.toLowerCase(),
-            apr: apr,
+            aprMultiplier: aprMultiplier,
             timestamp: currentTime,
           });
 
@@ -83,14 +83,14 @@ const getLatestAprWithParam = async (req, res, next) => {
   const passedAsset = req.params.asset.toLowerCase();
 
   const apr = await Apr.find({ assetName: { $eq: passedAsset } })
-    .select("assetName apr timestamp")
+    .select("assetName aprMultiplier timestamp")
     .exec();
 
   let obj = {};
 
   obj["timestampDate"] = apr[apr.length - 1]["timestamp"];
   obj["timestamp"] = (apr[apr.length - 1]["timestamp"].getTime() / 1000).toFixed();
-  obj["apr"] = apr[apr.length - 1]["apr"];
+  obj["aprMultiplier"] = apr[apr.length - 1]["aprMultiplier"];
   obj["assetName"] = apr[apr.length - 1]["assetName"];
 
   res.json(obj || {});
