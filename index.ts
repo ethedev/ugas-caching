@@ -14,7 +14,7 @@ cron.schedule('0 0 * * *', function() {
 });
 
 // apr scheduler
-cron.schedule('* * 6 * *', function() {
+cron.schedule('* * 6 * * *', function() {
     console.log("running apr cron")
     mongoFunctions.saveAPR();
 });
