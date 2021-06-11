@@ -13,6 +13,14 @@ cron.schedule('0 0 * * *', function() {
     mongoFunctions.createMedian();
 });
 
+// apr scheduler
+cron.schedule('* * 6 * * *', function() {
+    console.log("running apr cron")
+    mongoFunctions.saveAPR();
+});
+// mongoFunctions.saveAPR();
+
+
 // twap scheduler
 cron.schedule('0 * * * *', function() {
     console.log("running twap cron")
@@ -77,5 +85,8 @@ app.get('/ustonks/index-history/:cycle', mongoFunctions.getIndexWithParam);
 // @todo Remove endpoint.
 app.get('/ustonks/index-history-daily', mongoFunctions.getDailyIndex);
 app.get('/ustonks/index-history-daily/:cycle', mongoFunctions.getDailyIndexWithParam);
+
+// apr
+app.get('/degenerative/apr/:asset', mongoFunctions.getLatestAprWithParam);
 
 app.listen(8080);
