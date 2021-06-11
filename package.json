@@ -22,6 +22,7 @@
     "ethers": "^5.3.0",
     "express": "^4.17.1",
     "google-spreadsheet": "^3.1.15",
+    "graphql-request": "^3.4.0",
     "highland": "^2.13.5",
     "moment": "^2.29.1",
     "mongodb": "^3.6.0",

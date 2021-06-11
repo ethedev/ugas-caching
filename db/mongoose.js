@@ -6,12 +6,13 @@ const highland = require("highland");
 const moment = require("moment");
 const fetch = require("node-fetch");
 const BigNumber = require("bignumber.js");
-const { getMiningRewards } = require("./apr");
+const { getMiningRewards, getPoolData, getUsdPrice } = require("./apr");
 const Asset = require("../assets/assets.json")
 const GasMedian = require("../models/median");
 const Apr = require("../models/apr");
 const Twap = require("../models/twap");
 const Index = require("../models/indexValue");
+const CollateralData = require("../assets/collateral.json")
 const TestingUniPriceFunctions = require("../price-feed/CreateNewUni");
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 
@@ -35,21 +36,6 @@ mongoose
 const saveAPR = async () => {
   const currentTime = new Date().toISOString();
 
-  const assetName = "UGAS-JUN21";
-  const synth = {
-      name: 'June',
-      cycle: 'JUN',
-      year: '21',
-      collateral: 'WETH',
-      token: {
-        address: '0xa6b9d7e3d76cf23549293fb22c488e0ea591a44e',
-        decimals: 18
-      },
-      emp: { address: '0x4e8d60a785c2636a63c5bd47c7050d21266c8b43', new: true },
-      pool: { address: '0x2b5dfb7874f685bea30b7d8426c9643a4bcf5873' },
-      expired: null
-    };
-
   for (const network in Asset) {
     if (network == "mainnet") {
       const assetCategories = Asset[network]
@@ -60,7 +46,21 @@ const saveAPR = async () => {
           const assetName = assetCategory + "-" + asset.cycle + asset.year
           console.log(assetName)
 
-          const apr = await getMiningRewards(assetName, asset)
+          const collateral = CollateralData["mainnet"][asset.collateral];
+          const collateralPriceUsd = await getUsdPrice(collateral.coingeckoId ?? '')
+          const pool = await getPoolData(asset.pool)
+
+          let priceUsd;
+          let pricePerPaired;
+          if (asset.collateral === pool.token0.symbol) {
+            priceUsd = pool.token0Price * collateralPriceUsd;
+            pricePerPaired = pool.token0Price;
+          } else {
+            priceUsd = pool.token1Price * collateralPriceUsd;
+            pricePerPaired = pool.token1Price;
+          }
+
+          const apr = await getMiningRewards(assetName, asset, priceUsd)
 
           const clientCalc = (1 / (1.5 + 1)) * apr;
           console.log("clientCalc", clientCalc)

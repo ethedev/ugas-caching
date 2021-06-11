@@ -1,3 +1,4 @@
+import { request } from 'graphql-request';
 import moment from 'moment';
 import axios from 'axios';
 import Assets from '../assets/assets.json';
@@ -5,26 +6,47 @@ import UNIContract from '../abi/uni.json';
 import EMPContract from '../abi/emp.json';
 import erc20 from '../abi/erc20.json';
 import { ExternalProvider, Web3Provider } from '@ethersproject/providers';
-import { ISynth, AssetModel, DevMiningCalculatorParams } from '../types';
+import { ISynth, AssetModel, DevMiningCalculatorParams, ILiquidityPool } from '../types';
 import { BigNumber, ethers, utils, constants, providers } from 'ethers';
 import sessionStorage from 'node-sessionstorage';
 import fetch from "node-fetch";
+import {
+  UNISWAP_ENDPOINT,
+  SUSHISWAP_ENDPOINT,
+  UNISWAP_MARKET_DATA_QUERY,
+} from './queries';
+
 
 const EthNodeProvider = new providers.JsonRpcProvider(
   'https://fee7372b6e224441b747bf1fde15b2bd.eth.rpc.rivet.cloud'
 );
+
+
+export const getPoolData = async (pool: ILiquidityPool) => {
+  const endpoint = pool.location === 'uni' ? UNISWAP_ENDPOINT : SUSHISWAP_ENDPOINT;
+  try {
+    const data = await request(endpoint, UNISWAP_MARKET_DATA_QUERY, { poolAddress: pool.address });
+    return data.pair;
+  } catch (err) {
+    console.log(err);
+    return Promise.reject(err);
+  }
+};
+
 
 /**
  * Fetch the mining rewards
  * @notice This will be removed after the api is ready (don't remove any comments)
  * @param {string} assetName Name of an asset for the input
  * @param {ISynth} asset Asset object for the input
+ * @param {number} assetPrice Asset price for the input
  * @public
  * @methods
  */
 export const getMiningRewards = async (
   assetName: string,
   asset: ISynth,
+  assetPrice: number,
 ) => {
   // TODO Use params for setup instead of test setup
   const ethersProvider: ethers.providers.JsonRpcProvider =  EthNodeProvider;
@@ -74,18 +96,18 @@ export const getMiningRewards = async (
     const baseAsset = BigNumber.from(10).pow(asset.token.decimals);
 
     /// @dev Temporary pricing
-    // let tokenPrice;
+    let tokenPrice;
     if (asset.collateral === "USDC") {
       baseCollateral = BigNumber.from(10).pow(6);
       /* @ts-ignore */
-      // tokenPrice = assetPrice * 1;
+      tokenPrice = assetPrice * 1;
       // } else if(assetInstance.collateral === "YAM"){
       //   tokenPrice = assetPrice * yamPrice;
     } else {
       baseCollateral = BigNumber.from(10).pow(18);
       /* @ts-ignore */
       // tokenPrice = assetPrice * ethPrice;
-      // tokenPrice = assetPrice * 1;
+      tokenPrice = assetPrice * 1;
     }
 
     /// @dev Prepare reward calculation
@@ -112,13 +134,12 @@ export const getMiningRewards = async (
     const assetReserve0 = BigNumber.from(contractLpCall._reserve0).div(baseAsset).toNumber();
     const assetReserve1 = BigNumber.from(contractLpCall._reserve1).div(baseCollateral).toNumber();
 
-    calcAsset = assetReserve0 * getEmpInfo.tokenPrice;
+    calcAsset = assetReserve0 * tokenPrice;
     calcCollateral = assetReserve1 * (asset.collateral == "WETH" ? ethPrice : 1);
 
     /// @dev Prepare calculation
     console.log("assetName", assetName)
     // getEmpInfo.tokenCount
-
     let _tokenCount: number;
     if (assetName.toLowerCase().includes("ustonks")) {
       _tokenCount = Number(utils.formatUnits(getEmpInfo.tokenCount, 6))
@@ -126,12 +147,9 @@ export const getMiningRewards = async (
       _tokenCount = Number(utils.formatUnits(getEmpInfo.tokenCount, 18))
     }
     console.log("_tokenCount", _tokenCount.toString())
-    // getEmpInfo.tokenPrice
-
-    /// @TODO Add uPUNKS and uSTONKS prices:
-    const _tokenPrice: number = getEmpInfo.tokenPrice
+    // tokenPrice
+    const _tokenPrice: number = tokenPrice
     console.log("_tokenPrice", _tokenPrice)
-
     // whitelistedTVM
     const _whitelistedTVM: number = Number(whitelistedTVM)
     console.log("_whitelistedTVM", _whitelistedTVM)
