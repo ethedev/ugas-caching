@@ -44,8 +44,6 @@ const saveAPR = async () => {
         for (const assetDetail in assetObject) {
           const asset = assetObject[assetDetail]
           const assetName = assetCategory + "-" + asset.cycle + asset.year
-          console.log(assetName)
-
           const collateral = CollateralData["mainnet"][asset.collateral];
           const collateralPriceUsd = await getUsdPrice(collateral.coingeckoId ?? '')
           const pool = await getPoolData(asset.pool)
@@ -64,8 +62,8 @@ const saveAPR = async () => {
 
           const clientCalc = (1 / (1.5 + 1)) * aprMultiplier;
           console.log("clientCalc", clientCalc)
+          console.log("------------------------------------")
 
-          /// @TODO Uncomment before merge
           const getApr = new Apr({
             assetName: assetName.toLowerCase(),
             aprMultiplier: aprMultiplier,

@@ -213,7 +213,6 @@ export const getMiningRewards = async (
     // General APR = (sponsorAmountPerDollarMintedPerWeek * chosen collateralEfficiency * 52)
     let generalAPR: number = sponsorAmountPerDollarMintedPerWeek * _numberOfWeeksInYear * 100;
     console.log("generalAPR", generalAPR.toString())
-    console.log("------------------------------------")
 
     if (generalAPR === Infinity || _tokenPrice === undefined) {
       generalAPR = 0;
