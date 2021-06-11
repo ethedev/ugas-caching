@@ -97,7 +97,7 @@ export const getMiningRewards = async (
     let yamWeekRewards = 0;
     let umaWeekRewards = 0;
     /// @TODO Check assetName
-    if (assetName === "uPUNKS-0921") {
+    if (assetName.toLowerCase() === "upunks-0921") {
       if (current < week1UntilWeek2) {
         umaWeekRewards += 5000
       } else if (current < week3UntilWeek4) {
@@ -118,11 +118,20 @@ export const getMiningRewards = async (
     /// @dev Prepare calculation
     console.log("assetName", assetName)
     // getEmpInfo.tokenCount
-    const _tokenCount: number = Number(utils.formatUnits(getEmpInfo.tokenCount, 18))
+
+    let _tokenCount: number;
+    if (assetName.toLowerCase().includes("ustonks")) {
+      _tokenCount = Number(utils.formatUnits(getEmpInfo.tokenCount, 6))
+    } else {
+      _tokenCount = Number(utils.formatUnits(getEmpInfo.tokenCount, 18))
+    }
     console.log("_tokenCount", _tokenCount.toString())
     // getEmpInfo.tokenPrice
+
+    /// @TODO Add uPUNKS and uSTONKS prices:
     const _tokenPrice: number = getEmpInfo.tokenPrice
     console.log("_tokenPrice", _tokenPrice)
+
     // whitelistedTVM
     const _whitelistedTVM: number = Number(whitelistedTVM)
     console.log("_whitelistedTVM", _whitelistedTVM)
@@ -188,7 +197,7 @@ export const getMiningRewards = async (
     console.log("generalAPR", generalAPR.toString())
     console.log("------------------------------------")
 
-    if (generalAPR === Infinity) {
+    if (generalAPR === Infinity || _tokenPrice === undefined) {
       generalAPR = 0;
     }
 
@@ -247,7 +256,6 @@ const getEmpData = async (devmining, ethersProvider: ethers.providers.JsonRpcPro
     }
   );
 
-  // TODO Object.fromEntries(estimateDevMiningRewards)
   /// @dev Structure rewards
   const rewards: any = {};
   let whitelistedTVM: string = "";

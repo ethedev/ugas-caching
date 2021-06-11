@@ -7,7 +7,7 @@ const moment = require("moment");
 const fetch = require("node-fetch");
 const BigNumber = require("bignumber.js");
 const { getMiningRewards } = require("./apr");
-
+const Asset = require("../assets/assets.json")
 const GasMedian = require("../models/median");
 const Apr = require("../models/apr");
 const Twap = require("../models/twap");
@@ -50,20 +50,51 @@ const saveAPR = async () => {
       expired: null
     };
 
-  const apr = await getMiningRewards(assetName, synth)
+  for (const network in Asset) {
+    if (network == "mainnet") {
+      const assetCategories = Asset[network]
+      for (const assetCategory in assetCategories) {
+        const assetObject = assetCategories[assetCategory]
+        for (const assetDetail in assetObject) {
+          const asset = assetObject[assetDetail]
+          const assetName = assetCategory + "-" + asset.cycle + asset.year
+          console.log(assetName)
 
-  const clientCalc = (1 / (1.5 + 1)) * apr;
-  console.log("clientCalc", clientCalc)
+          const apr = await getMiningRewards(assetName, asset)
 
-  /// @TODO Uncomment before merge
-  // const getApr = new Apr({
-  //   assetName: assetName,
-  //   apr: apr,
-  //   timestamp: currentTime,
-  // });
-  //
-  // await getApr.save();
+          const clientCalc = (1 / (1.5 + 1)) * apr;
+          console.log("clientCalc", clientCalc)
+
+          /// @TODO Uncomment before merge
+          const getApr = new Apr({
+            assetName: assetName.toLowerCase(),
+            apr: apr,
+            timestamp: currentTime,
+          });
+
+          await getApr.save();
+        }
+      }
+    }
+  }
 }
+
+const getLatestAprWithParam = async (req, res, next) => {
+  const passedAsset = req.params.asset.toLowerCase();
+
+  const apr = await Apr.find({ assetName: { $eq: passedAsset } })
+    .select("assetName apr timestamp")
+    .exec();
+
+  let obj = {};
+
+  obj["timestampDate"] = apr[apr.length - 1]["timestamp"];
+  obj["timestamp"] = (apr[apr.length - 1]["timestamp"].getTime() / 1000).toFixed();
+  obj["apr"] = apr[apr.length - 1]["apr"];
+  obj["assetName"] = apr[apr.length - 1]["assetName"];
+
+  res.json(obj || {});
+};
 
 const createMedian = async (req, res, next) => {
   const medianValue = await runQuery();
@@ -632,6 +663,7 @@ const twapCreation = async (req, res, next) => {
 
 exports.createMedian = createMedian;
 exports.saveAPR = saveAPR;
+exports.getLatestAprWithParam = getLatestAprWithParam;
 exports.getIndexFromSpreadsheet = getIndexFromSpreadsheet;
 exports.getIndexFromSpreadsheetWithCycle = getIndexFromSpreadsheetWithCycle;
 exports.getMedians = getMedians;

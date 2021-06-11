@@ -86,4 +86,7 @@ app.get('/ustonks/index-history/:cycle', mongoFunctions.getIndexWithParam);
 app.get('/ustonks/index-history-daily', mongoFunctions.getDailyIndex);
 app.get('/ustonks/index-history-daily/:cycle', mongoFunctions.getDailyIndexWithParam);
 
+// apr
+app.get('/degenerative/apr/:asset', mongoFunctions.getLatestAprWithParam);
+
 app.listen(8080);
