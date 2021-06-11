@@ -211,14 +211,14 @@ export const getMiningRewards = async (
     // console.log("collateralEfficiency", collateralEfficiency)
 
     // General APR = (sponsorAmountPerDollarMintedPerWeek * chosen collateralEfficiency * 52)
-    let generalAPR: number = sponsorAmountPerDollarMintedPerWeek * _numberOfWeeksInYear * 100;
-    console.log("generalAPR", generalAPR.toString())
+    let aprMultiplier: number = sponsorAmountPerDollarMintedPerWeek * _numberOfWeeksInYear * 100;
+    console.log("aprMultiplier", aprMultiplier.toString())
 
-    if (generalAPR === Infinity || _tokenPrice === undefined) {
-      generalAPR = 0;
+    if (aprMultiplier === Infinity || _tokenPrice === undefined) {
+      aprMultiplier = 0;
     }
 
-    return generalAPR.toString();
+    return aprMultiplier.toString();
   } catch (e) {
     console.error("error", e);
     return 0;
