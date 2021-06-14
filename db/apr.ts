@@ -342,9 +342,7 @@ const getContractInfo = async (address: string) => {
 const getPriceByContract = async (address: string, toCurrency?: string) => {
   // TODO: Remove while loop
   let result = await getContractInfo(address);
-  while (!result) {
-    result = await getContractInfo(address);
-  }
+  
   return (
     result &&
     result.market_data &&
