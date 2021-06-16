@@ -341,7 +341,13 @@ const getContractInfo = async (address: string) => {
 
 const getPriceByContract = async (address: string, toCurrency?: string) => {
   // TODO: Remove while loop
+  let loopCount = 0
   let result = await getContractInfo(address);
+
+  while (!result && loopCount < 10) {
+    result = await getContractInfo(address);
+    loopCount += 1
+  }
   
   return (
     result &&
@@ -419,27 +425,42 @@ export function devMiningCalculator({
     collateralCount: number;
     collateralRequirement: number;
   }) {
-    /// @dev If we have a token price, use this first to estimate EMP value
-    if (tokenPrice) {
-      const fixedPrice = FixedNumber.from(tokenPrice.toString());
-      const fixedSize = FixedNumber.fromValue(tokenCount, tokenDecimals);
-      return fixedPrice.mulUnsafe(fixedSize);
-    }
+    const fallbackCr = "2000000000000000000"
+    const fixedPrice = FixedNumber.from(collateralPrice.toString());
+    const collFixedSize = FixedNumber.fromValue(
+      collateralCount,
+      collateralDecimals
+    );
 
-    /** @dev Theres no token price then fallback to collateral price divided by
-      * the collateralization requirement (usually 1.2) this should give a
-      * ballpack of what the total token value will be. Its still an over estimate though.
-     */
-    if (collateralPrice) {
-      const fixedPrice = FixedNumber.from(collateralPrice.toString());
-      const collFixedSize = FixedNumber.fromValue(
-        collateralCount,
-        collateralDecimals
-      );
-      return fixedPrice
-        .mulUnsafe(collFixedSize)
-        .divUnsafe(FixedNumber.fromValue(collateralRequirement, 18));
-    }
+    return fixedPrice
+      .mulUnsafe(collFixedSize)
+      .divUnsafe(FixedNumber.fromValue(fallbackCr, 18));
+
+    // /// @dev If we have a token price, use this first to estimate EMP value
+    // if (tokenPrice) {
+    //   const fixedPrice = FixedNumber.from(tokenPrice.toString());
+    //   const fixedSize = FixedNumber.fromValue(tokenCount, tokenDecimals);
+    //   return fixedPrice.mulUnsafe(fixedSize);
+    // }
+    //
+    // /** @dev Theres no token price then fallback to collateral price divided by
+    //   * the collateralization requirement (usually 1.2) this should give a
+    //   * ballpack of what the total token value will be. Its still an over estimate though.
+    //  */
+    // if (collateralPrice) {
+    //   const fixedPrice = FixedNumber.from(collateralPrice.toString());
+    //   const collFixedSize = FixedNumber.fromValue(
+    //     collateralCount,
+    //     collateralDecimals
+    //   );
+    //
+    //   const fallbackCr = "1250000000000000000"
+    //
+    //   return fixedPrice
+    //     .mulUnsafe(collFixedSize)
+    //     .divUnsafe(FixedNumber.fromValue(fallbackCr, 18));
+    // }
+
     throw new Error(
       "Unable to calculate emp value, no token price or collateral price"
     );
