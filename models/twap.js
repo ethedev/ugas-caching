@@ -9,4 +9,4 @@ const twapSchema = new mongoose.Schema({
     roundingDecimals: { type: String, require: false}
 });
 
-module.exports = mongoose.model('GasTwap', twapSchema);
+module.exports = mongoose.model('Twap', twapSchema);
