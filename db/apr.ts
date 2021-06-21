@@ -123,7 +123,7 @@ export const getMiningRewards = async (
     if (assetName.toLowerCase() === "upunks-0921") {
       if (current <= week1UntilWeek2 && current >= startRewardsTs) {
         umaWeekRewards += 5000
-    } else if (current <= week3UntilWeek4 && current > week1UntilWeek2) {
+      } else if (current <= week3UntilWeek4 && current > week1UntilWeek2) {
         yamWeekRewards += 5000;
       }
     }
