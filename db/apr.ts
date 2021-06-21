@@ -113,8 +113,8 @@ export const getMiningRewards = async (
     /// @dev Prepare reward calculation
     const current = moment().unix();
     /// @TODO Update week1UntilWeek2 and week3UntilWeek4 timestamps for uPUNKS after launch.
-    const week1UntilWeek2 = 1615665600;
-    const week3UntilWeek4 = 1616961600;
+    const week1UntilWeek2 = 1624834800;
+    const week3UntilWeek4 = 1625439600;
     const umaRewards = rewards[asset.emp.address];
     let yamWeekRewards = 0;
     let umaWeekRewards = 0;
@@ -348,7 +348,7 @@ const getPriceByContract = async (address: string, toCurrency?: string) => {
     result = await getContractInfo(address);
     loopCount += 1
   }
-  
+
   return (
     result &&
     result.market_data &&
