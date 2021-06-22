@@ -371,10 +371,6 @@ export function devMiningCalculator({
     const emp = new ethers.Contract(address, empAbi, provider);
     const tokenAddress = await emp.tokenCurrency();
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
-    /// @dev Fetches the token price from coingecko using getPriceByContract (getPrice == getPriceByContract)
-    const tokenPrice = await getPrice(tokenAddress, toCurrency).catch(
-      () => null
-    );
     const tokenCount = (await emp.totalTokensOutstanding()).toString();
     const tokenDecimals = (await tokenContract.decimals()).toString();
 
@@ -398,7 +394,6 @@ export function devMiningCalculator({
       address,
       toCurrency,
       tokenAddress,
-      tokenPrice,
       tokenCount,
       tokenDecimals,
       collateralAddress,
@@ -410,7 +405,6 @@ export function devMiningCalculator({
   }
   /// @dev Returns a fixed number
   function calculateEmpValue({
-    tokenPrice,
     tokenDecimals,
     collateralPrice,
     collateralDecimals,
@@ -418,7 +412,6 @@ export function devMiningCalculator({
     collateralCount,
     collateralRequirement,
   }: {
-    tokenPrice: number;
     tokenDecimals: number;
     collateralPrice: number;
     collateralDecimals: number;

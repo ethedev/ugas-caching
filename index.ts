@@ -14,11 +14,11 @@ cron.schedule('0 0 * * *', function() {
 });
 
 // apr scheduler
-// cron.schedule('0 */6 * * *', function() {
-//     console.log("running apr cron")
-//     mongoFunctions.saveAPR();
-// });
-mongoFunctions.saveAPR();
+cron.schedule('0 */6 * * *', function() {
+    console.log("running apr cron")
+    mongoFunctions.saveAPR();
+});
+// mongoFunctions.saveAPR();
 
 
 // twap scheduler
