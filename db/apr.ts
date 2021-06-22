@@ -113,16 +113,17 @@ export const getMiningRewards = async (
     /// @dev Prepare reward calculation
     const current = moment().unix();
     /// @TODO Update week1UntilWeek2 and week3UntilWeek4 timestamps for uPUNKS after launch.
-    const week1UntilWeek2 = 1615665600;
-    const week3UntilWeek4 = 1616961600;
+    const startRewardsTs = 1624309200;
+    const week1UntilWeek2 = 1625518800;
+    const week3UntilWeek4 = 1626728400;
     const umaRewards = rewards[asset.emp.address];
     let yamWeekRewards = 0;
     let umaWeekRewards = 0;
     /// @TODO Check assetName
     if (assetName.toLowerCase() === "upunks-0921") {
-      if (current < week1UntilWeek2) {
+      if (current <= week1UntilWeek2 && current >= startRewardsTs) {
         umaWeekRewards += 5000
-      } else if (current < week3UntilWeek4) {
+      } else if (current <= week3UntilWeek4 && current > week1UntilWeek2) {
         yamWeekRewards += 5000;
       }
     }
@@ -341,8 +342,14 @@ const getContractInfo = async (address: string) => {
 
 const getPriceByContract = async (address: string, toCurrency?: string) => {
   // TODO: Remove while loop
+  let loopCount = 0
   let result = await getContractInfo(address);
-  
+
+  while (!result && loopCount < 10) {
+    result = await getContractInfo(address);
+    loopCount += 1
+  }
+
   return (
     result &&
     result.market_data &&
@@ -364,10 +371,6 @@ export function devMiningCalculator({
     const emp = new ethers.Contract(address, empAbi, provider);
     const tokenAddress = await emp.tokenCurrency();
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
-    /// @dev Fetches the token price from coingecko using getPriceByContract (getPrice == getPriceByContract)
-    const tokenPrice = await getPrice(tokenAddress, toCurrency).catch(
-      () => null
-    );
     const tokenCount = (await emp.totalTokensOutstanding()).toString();
     const tokenDecimals = (await tokenContract.decimals()).toString();
 
@@ -391,7 +394,6 @@ export function devMiningCalculator({
       address,
       toCurrency,
       tokenAddress,
-      tokenPrice,
       tokenCount,
       tokenDecimals,
       collateralAddress,
@@ -403,7 +405,6 @@ export function devMiningCalculator({
   }
   /// @dev Returns a fixed number
   function calculateEmpValue({
-    tokenPrice,
     tokenDecimals,
     collateralPrice,
     collateralDecimals,
@@ -411,7 +412,6 @@ export function devMiningCalculator({
     collateralCount,
     collateralRequirement,
   }: {
-    tokenPrice: number;
     tokenDecimals: number;
     collateralPrice: number;
     collateralDecimals: number;
@@ -419,27 +419,42 @@ export function devMiningCalculator({
     collateralCount: number;
     collateralRequirement: number;
   }) {
-    /// @dev If we have a token price, use this first to estimate EMP value
-    if (tokenPrice) {
-      const fixedPrice = FixedNumber.from(tokenPrice.toString());
-      const fixedSize = FixedNumber.fromValue(tokenCount, tokenDecimals);
-      return fixedPrice.mulUnsafe(fixedSize);
-    }
+    const fallbackCr = "2000000000000000000"
+    const fixedPrice = FixedNumber.from(collateralPrice.toString());
+    const collFixedSize = FixedNumber.fromValue(
+      collateralCount,
+      collateralDecimals
+    );
 
-    /** @dev Theres no token price then fallback to collateral price divided by
-      * the collateralization requirement (usually 1.2) this should give a
-      * ballpack of what the total token value will be. Its still an over estimate though.
-     */
-    if (collateralPrice) {
-      const fixedPrice = FixedNumber.from(collateralPrice.toString());
-      const collFixedSize = FixedNumber.fromValue(
-        collateralCount,
-        collateralDecimals
-      );
-      return fixedPrice
-        .mulUnsafe(collFixedSize)
-        .divUnsafe(FixedNumber.fromValue(collateralRequirement, 18));
-    }
+    return fixedPrice
+      .mulUnsafe(collFixedSize)
+      .divUnsafe(FixedNumber.fromValue(fallbackCr, 18));
+
+    // /// @dev If we have a token price, use this first to estimate EMP value
+    // if (tokenPrice) {
+    //   const fixedPrice = FixedNumber.from(tokenPrice.toString());
+    //   const fixedSize = FixedNumber.fromValue(tokenCount, tokenDecimals);
+    //   return fixedPrice.mulUnsafe(fixedSize);
+    // }
+    //
+    // /** @dev Theres no token price then fallback to collateral price divided by
+    //   * the collateralization requirement (usually 1.2) this should give a
+    //   * ballpack of what the total token value will be. Its still an over estimate though.
+    //  */
+    // if (collateralPrice) {
+    //   const fixedPrice = FixedNumber.from(collateralPrice.toString());
+    //   const collFixedSize = FixedNumber.fromValue(
+    //     collateralCount,
+    //     collateralDecimals
+    //   );
+    //
+    //   const fallbackCr = "1250000000000000000"
+    //
+    //   return fixedPrice
+    //     .mulUnsafe(collFixedSize)
+    //     .divUnsafe(FixedNumber.fromValue(fallbackCr, 18));
+    // }
+
     throw new Error(
       "Unable to calculate emp value, no token price or collateral price"
     );
