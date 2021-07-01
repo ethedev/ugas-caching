@@ -21,6 +21,7 @@ const client = new BigQuery();
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.URI}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const assetURI =
   "https://raw.githubusercontent.com/yam-finance/degenerative/master/protocol/assets.json";
+const newAssetsURI = "https://api.yam.finance/synths/assets"
 const INFURA_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
 const web3 = new Web3(INFURA_URL);
 
@@ -35,10 +36,12 @@ mongoose
 
 const saveAPR = async () => {
   const currentTime = new Date().toISOString();
+  const response = await fetch(newAssetsURI);
+  const data = await response.json();
 
-  for (const network in Asset) {
+  for (const network in data) {
     if (network == "mainnet") {
-      const assetCategories = Asset[network]
+      const assetCategories = data[network]
       for (const assetCategory in assetCategories) {
         const assetObject = assetCategories[assetCategory]
         for (const assetDetail in assetObject) {
