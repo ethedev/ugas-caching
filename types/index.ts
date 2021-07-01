@@ -53,7 +53,7 @@ export interface IToken extends IContract {
 }
 
 export interface ILiquidityPool extends IContract {
-  location: 'uni' | 'sushi' | 'bal';
+  location: 'uniswap' | 'sushiswap' | 'balancer';
 }
 
 export interface ISynth {
