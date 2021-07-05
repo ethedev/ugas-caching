@@ -116,6 +116,7 @@ export const getMiningRewards = async (
     const startRewardsTs = 1624309200;
     const week1UntilWeek2 = 1625518800;
     const week3UntilWeek4 = 1626728400;
+    const startDecrease = 1625518800;
     const umaRewards = rewards[asset.emp.address];
     let yamWeekRewards = 0;
     let umaWeekRewards = 0;
@@ -159,9 +160,13 @@ export const getMiningRewards = async (
     // whitelistedTVM
     const _whitelistedTVM: number = Number(whitelistedTVM)
     console.log("_whitelistedTVM", _whitelistedTVM)
-    // 50_000
-    /// @TODO Check why umaRewards != 50_000
-    const _umaRewards: number = 50_000
+    // _umaRewards
+    var _umaRewards: number = 50_000
+
+    if (current >= startDecrease) {
+        _umaRewards = 35_000
+    }
+
     console.log("_umaRewards", _umaRewards)
     // umaPrice
     const _umaPrice: number = umaPrice
